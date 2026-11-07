@@ -50,6 +50,8 @@ export function usePermissions() {
       status: UserStatus.ACTIVE,
       selectedUnitId: unitId,
       unitIds: [unitId],
+      allowedModules: currentUser.allowedModules || [],
+      blockedModules: currentUser.blockedModules || [],
     };
 
     setUserData(mappedUserData);
@@ -80,13 +82,22 @@ export function usePermissions() {
     }
   }, [currentUser]);
 
-  // Funções de verificação de permissão
-  const canView = useCallback((module: string) => userRole ? hasPermission(userRole, module, 'canView') : false, [userRole]);
-  const canCreate = useCallback((module: string) => userRole ? hasPermission(userRole, module, 'canCreate') : false, [userRole]);
-  const canEdit = useCallback((module: string) => userRole ? hasPermission(userRole, module, 'canEdit') : false, [userRole]);
-  const canDelete = useCallback((module: string) => userRole ? hasPermission(userRole, module, 'canDelete') : false, [userRole]);
-  const canExport = useCallback((module: string) => userRole ? hasPermission(userRole, module, 'canExport') : false, [userRole]);
-  const canImport = useCallback((module: string) => userRole ? hasPermission(userRole, module, 'canImport') : false, [userRole]);
+  // Funções de verificação de permissão (com suporte a liberação dinâmica de módulos por usuário)
+  const canView = useCallback((module: string) => userRole ? hasPermission(userRole, module, 'canView', userData || undefined) : false, [userRole, userData]);
+  const canCreate = useCallback((module: string) => userRole ? hasPermission(userRole, module, 'canCreate', userData || undefined) : false, [userRole, userData]);
+  const canEdit = useCallback((module: string) => userRole ? hasPermission(userRole, module, 'canEdit', userData || undefined) : false, [userRole, userData]);
+  const canDelete = useCallback((module: string) => userRole ? hasPermission(userRole, module, 'canDelete', userData || undefined) : false, [userRole, userData]);
+  const canExport = useCallback((module: string) => userRole ? hasPermission(userRole, module, 'canExport', userData || undefined) : false, [userRole, userData]);
+  const canImport = useCallback((module: string) => userRole ? hasPermission(userRole, module, 'canImport', userData || undefined) : false, [userRole, userData]);
+
+  // Funções de verificação estrita de exclusão (USER e PROFESSOR NUNCA excluem usuários ou professores)
+  const canDeleteUser = useCallback(() => {
+    return userRole === UserRole.SUPER_ADMIN || userRole === UserRole.ADMIN;
+  }, [userRole]);
+
+  const canDeleteProfessor = useCallback(() => {
+    return userRole === UserRole.SUPER_ADMIN || userRole === UserRole.ADMIN;
+  }, [userRole]);
 
   // Funções de verificação de role (PRD Enterprise)
   const isUserSuperAdmin = useCallback(() => {
@@ -143,14 +154,14 @@ export function usePermissions() {
 
 
   // Função para obter permissões completas de um módulo
-  const getPermissions = useCallback((module: string) => userRole ? getModulePermissions(userRole, module) : {
+  const getPermissions = useCallback((module: string) => userRole ? getModulePermissions(userRole, module, userData || undefined) : {
     canView: false,
     canCreate: false,
     canEdit: false,
     canDelete: false,
     canExport: false,
     canImport: false
-  }, [userRole]);
+  }, [userRole, userData]);
 
   return useMemo(() => ({
     // Estados
@@ -163,6 +174,8 @@ export function usePermissions() {
     canCreate,
     canEdit,
     canDelete,
+    canDeleteUser,
+    canDeleteProfessor,
     canExport,
     canImport,
     
@@ -191,6 +204,8 @@ export function usePermissions() {
     canCreate, 
     canEdit, 
     canDelete, 
+    canDeleteUser,
+    canDeleteProfessor,
     canExport, 
     canImport, 
     isUserSuperAdmin,

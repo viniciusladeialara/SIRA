@@ -139,7 +139,7 @@ export const APP_MODULES: ModuleDefinition[] = [
     icon: ArrowRightLeft,
     category: 'gestao',
     order: 30,
-    defaultRoles: [UserRole.ADMIN, UserRole.USER],
+    defaultRoles: [UserRole.ADMIN, UserRole.USER, UserRole.PROFESSOR],
     component: ScheduleSwapAnalyticsModule
   },
   {
@@ -216,8 +216,7 @@ export const APP_MODULES: ModuleDefinition[] = [
     icon: Wrench,
     category: 'logistica',
     order: 30,
-    defaultRoles: [UserRole.PROFESSOR],
-    exactRolesOnly: true,
+    defaultRoles: [UserRole.ADMIN],
     component: TeacherIssueModule
   },
 

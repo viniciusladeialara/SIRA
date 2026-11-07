@@ -135,7 +135,7 @@ export function ClassModule() {
   const { toast } = useToast();
   const { currentUser } = useAuth();
   const { cacheQuery } = useFirestoreCache();
-  const { userData } = usePermissions();
+  const { userData, canDelete } = usePermissions();
   const selectedUnitId = userData?.selectedUnitId || "caceres";
 
   const [unitMetadata, setUnitMetadata] = useState<any>(null);
@@ -308,8 +308,12 @@ export function ClassModule() {
     }
   };
 
-  // Deleta a turma (Refatorada para Frontend-First)
+  // Deleta a turma (Refatorada para Frontend-First - Restrita a Administradores)
   const handleDeleteClass = (id: string) => {
+    if (!canDelete('classes')) {
+      toast({ title: "Acesso Negado", description: "Você não tem permissão para excluir turmas. Apenas administradores podem realizar exclusões.", variant: "destructive" });
+      return;
+    }
     if (!window.confirm("Tem certeza que deseja excluir esta turma?")) return;
     
     const classData = classes.find(c => c.id === id);
@@ -331,6 +335,9 @@ export function ClassModule() {
       Object.entries(pendingChanges).forEach(([id, change]) => {
         const docRef = doc(db, "classes", id);
         if (change.type === 'delete') {
+          if (!canDelete('classes')) {
+            throw new Error("Você não tem permissão para excluir turmas.");
+          }
           batch.delete(docRef);
         } else {
           const { id: _, ...payload } = change.data;
@@ -818,15 +825,18 @@ export function ClassModule() {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => handleDeleteClass(classData.id)} 
-                          disabled={isDeleted || isSavingAll || !!isGenerating}
-                          className="text-red-500 hover:bg-red-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {canDelete('classes') && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleDeleteClass(classData.id)} 
+                            disabled={isDeleted || isSavingAll || !!isGenerating}
+                            className="text-red-500 hover:bg-red-50"
+                            title="Excluir turma"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

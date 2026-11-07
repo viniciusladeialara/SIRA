@@ -81,6 +81,7 @@ import {
   RefreshCw
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { usePermissions } from "@/hooks/usePermissions";
 import { useFirestoreCache } from "@/hooks/useCache";
 import { PageLayout, PageHeader, PageContent } from "@/components/ui/page-layout";
 import { CourseFormBuilder, CourseGeneralData } from "./CourseFormBuilder";
@@ -139,6 +140,7 @@ export default function CourseModule() {
   
   const { toast } = useToast();
   const { currentUser } = useAuth();
+  const { canDelete } = usePermissions();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Carrega e sincroniza os cursos do Firestore em tempo real
@@ -201,8 +203,12 @@ export default function CourseModule() {
     }
   };
 
-  // Prepara para deletar um curso
+  // Prepara para deletar um curso (Restrito a Administradores)
   const handleDeleteClick = async (course: Course) => {
+    if (!canDelete('courses')) {
+      toast({ title: "Acesso Negado", description: "Você não tem permissão para excluir cursos. Apenas administradores podem realizar exclusões.", variant: "destructive" });
+      return;
+    }
     const count = await checkRelatedClasses(course.id);
     setRelatedClasses(count);
     setCourseToDelete(course);
@@ -211,7 +217,7 @@ export default function CourseModule() {
 
   // Deleta o curso (Refatorada para Frontend-First)
   const handleDeleteCourse = () => {
-    if (!courseToDelete) return;
+    if (!courseToDelete || !canDelete('courses')) return;
     
     setPendingChanges(prev => ({
       ...prev,
@@ -699,15 +705,18 @@ export default function CourseModule() {
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-red-500 hover:bg-red-50"
-                              onClick={() => handleDeleteClick(course)}
-                              disabled={isDeleted || isSavingAll}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            {canDelete('courses') && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-red-500 hover:bg-red-50"
+                                onClick={() => handleDeleteClick(course)}
+                                disabled={isDeleted || isSavingAll}
+                                title="Excluir curso"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>

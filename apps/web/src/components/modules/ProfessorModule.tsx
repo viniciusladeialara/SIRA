@@ -99,7 +99,7 @@ export function ProfessorModule() {
   // Estados para gestão de projetos (Removidos para evitar duplicidade com Alocação Docente)
 
   // Controle de permissões
-  const { isUserAdmin, isUserOperational, userData } = usePermissions();
+  const { isUserAdmin, isUserOperational, userData, canDelete } = usePermissions();
   const { currentUser } = useAuth();
   const selectedUnitId = userData?.selectedUnitId || "caceres";
   const isAdmin = isUserAdmin();
@@ -292,10 +292,10 @@ export function ProfessorModule() {
     }
   };
 
-  // Função para excluir um professor (Refatorada para Frontend-First)
+  // Função para excluir um professor (Refatorada para Frontend-First - Restrita a Administradores)
   const handleDeleteProfessor = (id: string) => {
-    if (!canManageProfessors) {
-      toast({ title: "Acesso negado", description: "Você não tem permissão para excluir professores.", variant: "destructive" });
+    if (!canDelete('professors')) {
+      toast({ title: "Acesso negado", description: "Você não tem permissão para excluir professores. Apenas administradores podem realizar exclusões.", variant: "destructive" });
       return;
     }
     
@@ -356,8 +356,8 @@ export function ProfessorModule() {
       Object.entries(pendingChanges).forEach(([id, change]) => {
         const docRef = doc(db, "teachers", id);
         if (change.type === 'delete') {
-          if (!canManageProfessors) {
-            throw new Error("Você não tem permissão para excluir professores.");
+          if (!canDelete('professors')) {
+            throw new Error("Você não tem permissão para excluir professores. Apenas administradores podem realizar exclusões.");
           }
           batch.delete(docRef);
           batch.delete(doc(db, "users", id));
@@ -880,8 +880,8 @@ export function ProfessorModule() {
                               <Edit className="h-4 w-4 text-blue-500" />
                             </Button>
                             
-                            {/* Botão de EXCLUIR */}
-                            {canManageProfessors && (
+                            {/* Botão de EXCLUIR (Apenas Administradores - Perfil USER não vê) */}
+                            {canDelete('professors') && (
                               <Button
                                 variant="outline"
                                 size="sm"

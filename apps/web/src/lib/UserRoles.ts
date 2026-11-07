@@ -101,13 +101,22 @@ const operationalAccess: ModulePermissions = {
   canView: true,
   canCreate: true,
   canEdit: true,
-  canDelete: true,
+  canDelete: false, // Perfil USER NUNCA exclui recursos (apenas Administradores excluem)
+  canExport: true,
+  canImport: true
+};
+
+const operationalScheduleAccess: ModulePermissions = {
+  canView: true,
+  canCreate: true,
+  canEdit: true,
+  canDelete: true, // Agendamentos podem ser cancelados/excluídos pelo coordenador
   canExport: true,
   canImport: true
 };
 
 /**
- * Mapa de permissoes por role (Alinhado ao PRD)
+ * Mapa de permissoes por role (Alinhado ao PRD e Modelo em 4 Niveis)
  */
 export const ROLE_PERMISSIONS: Record<UserRole, Record<string, ModulePermissions>> = {
   [UserRole.SUPER_ADMIN]: {
@@ -118,8 +127,10 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, ModulePermissions
     courses: fullAccess,
     professors: fullAccess,
     users: fullAccess,
+    'user-management': fullAccess,
     swaps: fullAccess,
     assets: fullAccess,
+    uniforms: fullAccess,
     'partner-school': fullAccess,
     'diary-import': fullAccess,
     audit: fullAccess,
@@ -137,38 +148,52 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, ModulePermissions
     courses: fullAccess,
     professors: fullAccess,
     users: fullAccess,
+    'user-management': fullAccess,
     swaps: fullAccess,
     assets: fullAccess,
+    uniforms: fullAccess,
     'partner-school': fullAccess,
     'diary-import': fullAccess,
     audit: readOnly,
     conflicts: fullAccess,
     'teacher-allocation': fullAccess,
+    'system-settings': noAccess, // Super admin apenas
   },
   [UserRole.USER]: {
     overview: readOnly,
-    schedules: operationalAccess,
+    schedules: operationalScheduleAccess,
     classes: operationalAccess,
     environments: operationalAccess,
     courses: operationalAccess,
-    professors: operationalAccess, // Cria, edita e exclui professores da própria unidade (Estrutura de Papéis)
-    users: noAccess, // Não acessa nem cria usuários do sistema
-    swaps: readOnly,
+    professors: operationalAccess, // Cria e edita professores, mas canDelete: false (não exclui!)
+    users: noAccess, // Não acessa nem cria/exclui usuários do sistema
+    'user-management': noAccess,
+    swaps: operationalAccess,
     assets: operationalAccess,
+    uniforms: operationalAccess,
     'partner-school': readOnly,
     'diary-import': fullAccess,
     audit: noAccess,
-    conflicts: fullAccess,
+    conflicts: readOnly,
     'teacher-allocation': readOnly,
+    'system-settings': noAccess,
   },
   [UserRole.PROFESSOR]: {
-    'teacher-week': fullAccess,
-    'report-issue': fullAccess,
-    schedules: { ...readOnly, canCreate: true, canEdit: true, canDelete: true }, // Reservar sala, editar e excluir as suas
+    'teacher-week': fullAccess, // Visualização da sua grade semanal
+    swaps: { canView: true, canCreate: true, canEdit: false, canDelete: false, canExport: false, canImport: false }, // Apenas troca!
+    schedules: readOnly,
     environments: readOnly,
-    classes: readOnly,
+    classes: noAccess,
+    professors: noAccess,
+    users: noAccess,
+    'user-management': noAccess,
     overview: noAccess,
     audit: noAccess,
+    conflicts: noAccess,
+    assets: noAccess,
+    uniforms: noAccess,
+    reports: noAccess,
+    'system-settings': noAccess,
   },
   [UserRole.PARTNER_SCHOOL]: {
     'partner-tracking': readOnly,
@@ -182,12 +207,30 @@ export const ROLE_PERMISSIONS: Record<UserRole, Record<string, ModulePermissions
 
 /**
  * Funcao para verificar se usuario tem permissao
+ * Suporta permissoes estaticas por Role e liberacao dinamica pontual por usuario (allowedModules / blockedModules)
  */
 export const hasPermission = (
   userRole: UserRole,
   module: string,
-  action: keyof ModulePermissions
+  action: keyof ModulePermissions,
+  userOverrides?: { allowedModules?: string[]; blockedModules?: string[] }
 ): boolean => {
+  // 1. Verificação de módulo explicitamente bloqueado para este usuário
+  if (userOverrides?.blockedModules?.includes(module)) {
+    return false;
+  }
+
+  // 2. Verificação de liberação dinâmica de módulo para este usuário (promoção por competência)
+  if (userOverrides?.allowedModules?.includes(module)) {
+    // Se o perfil for USER, ele ganha acesso operacional ao módulo liberado,
+    // mas a regra estrita de não poder excluir (canDelete = false) permanece garantida!
+    if (action === 'canDelete' && userRole === UserRole.USER) {
+      return false;
+    }
+    return operationalAccess[action];
+  }
+
+  // 3. Verificação padrão da Role
   const permissions = ROLE_PERMISSIONS[userRole]?.[module];
   return permissions?.[action] || false;
 };
@@ -195,7 +238,17 @@ export const hasPermission = (
 /**
  * Funcao para obter todas as permissoes de um usuario para um modulo
  */
-export const getModulePermissions = (userRole: UserRole, module: string): ModulePermissions => {
+export const getModulePermissions = (
+  userRole: UserRole, 
+  module: string,
+  userOverrides?: { allowedModules?: string[]; blockedModules?: string[] }
+): ModulePermissions => {
+  if (userOverrides?.blockedModules?.includes(module)) {
+    return noAccess;
+  }
+  if (userOverrides?.allowedModules?.includes(module)) {
+    return userRole === UserRole.USER ? operationalAccess : fullAccess;
+  }
   return ROLE_PERMISSIONS[userRole]?.[module] || noAccess;
 };
 

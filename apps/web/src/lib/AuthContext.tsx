@@ -11,6 +11,8 @@ export interface SiraUser {
   unidadeId?: string | null;
   unidade?: { id: string; nome: string; sigla: string } | null;
   perfis?: string[];
+  allowedModules?: string[];
+  blockedModules?: string[];
 }
 
 interface AuthContextType {
@@ -59,6 +61,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             unidadeId: parsed.unidade?.id || parsed.unidadeId || null,
             unidade: parsed.unidade,
             perfis: parsed.perfis || ['administrador'],
+            allowedModules: parsed.allowedModules || [],
+            blockedModules: parsed.blockedModules || [],
           };
           setCurrentUser(mappedUser);
 
@@ -95,6 +99,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         unidadeId: user.unidade?.id || null,
         unidade: user.unidade,
         perfis: user.perfis || ['administrador'],
+        allowedModules: user.allowedModules || [],
+        blockedModules: user.blockedModules || [],
       };
 
       setCurrentUser(mappedUser);

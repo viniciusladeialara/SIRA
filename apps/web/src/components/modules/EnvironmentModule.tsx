@@ -58,7 +58,7 @@ export function EnvironmentModule() {
   const [isSavingAll, setIsSavingAll] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState<string>("all");
   const { toast } = useToast();
-  const { userData } = usePermissions();
+  const { userData, canDelete } = usePermissions();
   const selectedUnitId = userData?.selectedUnitId || "caceres";
 
   const [unitMetadata, setUnitMetadata] = useState<any>(null);
@@ -168,6 +168,11 @@ export function EnvironmentModule() {
   };
 
   const handleDeleteEnvironment = (id: string) => {
+    if (!canDelete('environments')) {
+      toast({ title: "Acesso Negado", description: "Você não tem permissão para excluir ambientes. Apenas administradores podem realizar exclusões.", variant: "destructive" });
+      return;
+    }
+    
     if (!window.confirm("Tem a certeza que deseja excluir este ambiente? A exclusão só será efetivada após salvar as pendências.")) return;
     
     const env = environments.find(e => e.id === id);
@@ -214,6 +219,9 @@ export function EnvironmentModule() {
       Object.entries(pendingChanges).forEach(([id, change]) => {
         const docRef = doc(db, "rooms", id);
         if (change.type === 'delete') {
+          if (!canDelete('environments')) {
+            throw new Error("Você não tem permissão para excluir ambientes.");
+          }
           batch.delete(docRef);
         } else {
           const { id: _, ...payload } = change.data;
@@ -813,14 +821,16 @@ export function EnvironmentModule() {
                                       >
                                         <Edit className="h-4 w-4" />
                                       </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => handleDeleteEnvironment(env.id)}
-                                        className="h-8 w-8 text-slate-500 hover:text-red-600 hover:bg-red-50"
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
+                                      {canDelete('environments') && (
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() => handleDeleteEnvironment(env.id)}
+                                          className="h-8 w-8 text-slate-500 hover:text-red-600 hover:bg-red-50"
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      )}
                                     </>
                                   )}
                                 </div>
@@ -913,14 +923,16 @@ export function EnvironmentModule() {
                                   >
                                     <Edit className="h-4 w-4" />
                                   </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleDeleteEnvironment(env.id)}
-                                    className="h-8 w-8 text-slate-500 hover:text-red-600 hover:bg-red-50"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
+                                  {canDelete('environments') && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handleDeleteEnvironment(env.id)}
+                                      className="h-8 w-8 text-slate-500 hover:text-red-600 hover:bg-red-50"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  )}
                                 </>
                               )}
                             </div>
