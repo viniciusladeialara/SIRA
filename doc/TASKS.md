@@ -53,11 +53,11 @@
 - [x] **F2-13**: Implementação do `JwtStrategy` e `JwtAuthGuard` global com suporte a decorador `@Public()` e `@CurrentUser()`.
 
 ### 2.4 Controle de Acesso Baseado em Perfis (RBAC Granular)
-- [>] **F2-14**: Criação dos decoradores `@Roles('administrador', ...)` e `@RequirePermissions('modulo.acao')`.
-- [ ] **F2-15**: Implementação do `PermissionsGuard` (avaliação de permissões granulares no banco e com caching em Redis).
+- [x] **F2-14**: Criação dos decoradores `@Roles('administrador', ...)` e `@RequirePermissions('modulo.acao')`.
+- [x] **F2-15**: Implementação do `RolesGuard`, `PermissionsGuard` e `RbacService` (avaliação no PostgreSQL com caching em Redis e superuser bypass).
 
 ### 2.5 Isolamento Multiunidade (Multi-tenancy Context)
-- [ ] **F2-16**: Criação do serviço de contexto assíncrono `TenantContext` baseado em `AsyncLocalStorage`.
+- [>] **F2-16**: Criação do serviço de contexto assíncrono `TenantContext` baseado em `AsyncLocalStorage`.
 - [ ] **F2-17**: Criação do `TenantInterceptor` para extração do header `X-Unidade-Id` e validação de vínculo do usuário.
 - [ ] **F2-18**: Injeção automática de escopo de unidade nas operações de repositório.
 
