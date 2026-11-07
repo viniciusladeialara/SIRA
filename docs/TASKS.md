@@ -34,9 +34,9 @@
 ## 🚀 Fase 2: CORE, Autenticação & API NestJS `[STATUS: EM PROGRESSO]`
 
 ### 2.1 Scaffolding & Setup da API Backend
-- [>] **F2-01**: Inicialização da aplicação NestJS dentro de `apps/api` via CLI `@nestjs/cli`.
-- [ ] **F2-02**: Configuração de scripts (`build`, `start:dev`, `test`, `lint`) e padronização do `tsconfig.json`.
-- [ ] **F2-03**: Instalação e configuração do **Prisma ORM** (`@prisma/client`, `prisma`).
+- [x] **F2-01**: Inicialização da aplicação NestJS dentro de `apps/api` via CLI `@nestjs/cli`.
+- [x] **F2-02**: Configuração de scripts (`build`, `start:dev`, `test`, `lint`) e padronização do `tsconfig.json`.
+- [>] **F2-03**: Instalação e configuração do **Prisma ORM** (`@prisma/client`, `prisma`).
 - [ ] **F2-04**: Introspecção ou mapeamento declarativo dos schemas `core` e `auditoria` no `schema.prisma`.
 - [ ] **F2-05**: Criação do serviço global singleton `PrismaService` com gerenciamento de lifecycle (`$connect`, `$disconnect`).
 
