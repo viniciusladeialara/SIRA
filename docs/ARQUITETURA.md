@@ -269,3 +269,77 @@ Erros na API devem seguir a especificação **RFC 7807 (Problem Details for HTTP
 
 - **Logger:** Winston configurado com saída em JSON nos ambientes de produção e saída colorida formatada em desenvolvimento.
 - **Trace Context:** Cada requisição recebe um cabeçalho `X-Trace-Id` que trafega entre os logs da aplicação, do banco e de auditoria para correlação direta de incidentes.
+
+
+---
+
+## 10. Arquitetura de Sincronização, Homologação e Promoção (Prod <-> Teste)
+
+O SIRA adota um modelo de **Ambientes Gêmeos Isolados com Promoção Transacional de Cenários**. Este padrão resolve o desafio crítico de permitir que coordenadores simulem semestres letivos, organizem matrizes curriculares e testem grades horárias sem qualquer risco de corromper ou indisponibilizar a produção ativa.
+
+```mermaid
+flowchart TD
+    subgraph PROD_ENV ["Ambiente de Produção (sira)"]
+        PROD_DB[("PostgreSQL: sira\n(Multi-Schema: core, academico, planejamento)")]
+        LIVE_USERS["Usuários Vivos / Diários / Chamadas / Auditoria"]
+        LIVE_USERS --> PROD_DB
+    end
+
+    subgraph SYNC_ENGINE ["SIRA Sync Engine (SyncModule)"]
+        MIRROR["1. Espelhamento Periódico / Sob Demanda\n(Snapshot pg_dump + Sanitização LGPD)"]
+        VALIDATOR["2. Pre-flight Conflict Validator\n(Detecção Estrita de Choques)"]
+        AUTH_GATE["3. Gatekeeper de Segurança\n(Validação de Senha Admin + RBAC)"]
+        TRANSACTION["4. Promoção Atômica ($transaction)\n(Upsert Idempotente + Log Auditoria)"]
+    end
+
+    subgraph TEST_ENV ["Ambiente de Homologação / Sandbox (sira_teste)"]
+        TEST_DB[("PostgreSQL: sira_teste\n(Cópia fiel para simulação)")]
+        COORDINATOR["Coordenador / Gestor\n(Criação e Teste de Grades)"]
+        COORDINATOR --> TEST_DB
+    end
+
+    PROD_DB -->|pg_dump snapshot| MIRROR
+    MIRROR -->|Restore limpo| TEST_DB
+    TEST_DB -->|Leitura do cenário testado| VALIDATOR
+    VALIDATOR -->|0 Conflitos| AUTH_GATE
+    AUTH_GATE -->|Autorização confirmada| TRANSACTION
+    TRANSACTION -->|Escrita atômica idempotente| PROD_DB
+```
+
+### 10.1. Fluxo A: Produção ➔ Teste ("Espelhamento Constante")
+- **Objetivo:** Fornecer um ambiente de testes 100% fiel à realidade operacional do SENAI.
+- **Mecanismo:**
+  1. Criação de snapshot do banco `sira` via `pg_dump` com nível de isolamento `REPEATABLE READ` (sem locks de leitura em produção).
+  2. Restauração limpa no banco `sira_teste`.
+  3. Sanitização de credenciais e dados sensíveis (LGPD), garantindo que dados confidenciais não fiquem expostos no ambiente de simulação.
+- **Acionamento:** Via API (`POST /sync/mirror`), via CLI (`npm run db:mirror`) ou via `menu.bat [14]`.
+
+### 10.2. Fluxo B: Teste ➔ Produção ("Envio com Senha e Autorização ADMIN")
+- **Por que NÃO usar replicação física bidirecional:**
+  Em produção ativa, novos dados são criados continuamente (notas, frequências, acessos, registros de auditoria). Um espelhamento bruto de volta destruiria dados vivos criados durante o período de planejamento.
+- **A Solução Enterprise (Promoção Transacional de Cenários):**
+  1. **Pre-flight Conflict Validation:** O sistema analisa a grade montada no banco de testes. Se houver qualquer conflito de sala ou sobrecarga de professor, o envio é **bloqueado imediatamente** (HTTP 409).
+  2. **Validação de Credenciais Admin (2FA / Senha Master):** O endpoint exige a senha do administrador, validada criptograficamente via `bcrypt`.
+  3. **Transação Atômica (`$transaction`):** O backend abre uma transação única no banco de produção. Todos os cursos, ambientes, docentes, turmas, feriados e agendamentos testados sofrem `upsert` idempotente. Se qualquer item falhar, ocorre `ROLLBACK` total.
+  4. **Auditoria Imutável:** Um registro detalhado é gravado em `auditoria.logs` contendo o usuário responsável, IP, data/hora, justificativa/motivo e contagem dos registros promovidos.
+
+---
+
+## 11. Estratégia de Escalabilidade Enterprise & Migração de Infraestrutura
+
+Se a plataforma SIRA for expandida para nível estadual ou nacional (milhares de docentes e centenas de unidades operacionais), a arquitetura foi desenhada para migrar suavemente sem necessidade de reescrever código:
+
+### 11.1. Desacoplamento via Configuração 12-Factor
+A aplicação consome conexões via variáveis de ambiente (`DATABASE_URL` e `DATABASE_TEST_URL`). Em um ambiente de alta escala:
+- `sira` pode residir em um cluster **AWS RDS PostgreSQL Multi-AZ** ou **GCP Cloud SQL**.
+- `sira_teste` pode residir em uma instância isolada de menor custo ou cluster de Staging.
+- **Zero linhas de código do backend precisam ser alteradas**, apenas os endpoints nas variáveis de ambiente.
+
+### 11.2. Escalabilidade Horizontal da API NestJS
+- Como a API é **stateless** (sessões mantidas no Redis e tokens JWT), basta subir múltiplas instâncias da API atrás de um **Load Balancer (NGINX, AWS ALB ou Traefik)**.
+- O rate limiting e a lista de revogação de tokens continuam centralizados no Redis Cluster compartilhado.
+
+### 11.3. Réplicas de Leitura (Read Replicas)
+Para relatórios pesados e visões analíticas da diretoria:
+- Provisionam-se réplicas de leitura assíncronas do PostgreSQL (`sira-read-replica`).
+- O Prisma ORM suporta extensões de read/write splitting, direcionando consultas pesadas de dashboards analíticos para a réplica, preservando 100% da CPU do banco principal para agendamentos e transações acadêmicas.

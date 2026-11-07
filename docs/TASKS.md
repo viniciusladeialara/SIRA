@@ -110,8 +110,22 @@
 
 ---
 
+## 🔄 Fase 6: Arquitetura de Sincronização e Homologação (Prod <-> Teste) `[STATUS: CONCLUÍDO]`
+
+- [x] **F6-01**: Provisionamento do banco de dados isolado `sira_teste` no PostgreSQL para simulações e homologação.
+- [x] **F6-02**: Configuração de variáveis de ambiente de banco secundário (`DATABASE_TEST_URL`) e registro dos dois servidores no pgAdmin 4 (`servers.json`).
+- [x] **F6-03**: Criação do serviço de espelhamento Produção ➔ Teste com higienização (`scripts/mirror-prod-to-test.mjs` e `SyncService.mirrorProdToTest`).
+- [x] **F6-04**: Criação do motor de validação prévia de conflitos no banco de testes (`SyncService.validateScenario`).
+- [x] **F6-05**: Criação do motor transacional de promoção Teste ➔ Produção com autenticação por senha de Administrador e log imutável de auditoria (`SyncService.promoteTestToProd`).
+- [x] **F6-06**: Criação da API REST `SyncController` com endpoints `/sync/status`, `/sync/validate`, `/sync/mirror` e `/sync/promote`.
+- [x] **F6-07**: Criação de script interativo de terminal `scripts/promote-test-to-prod.mjs` e integração com `menu.bat` (opções `14` e `15`).
+- [x] **F6-08**: Criação de suíte de testes automatizados `apps/api/test-sync-flow.mjs` validando os 5 cenários com 100% de sucesso.
+- [x] **F6-09**: Elaboração do documento de arquitetura de alta escala e migração em `docs/ARQUITETURA.md`.
+
+---
+
 ## ⚙️ Próximas Fases: Otimização & Relatórios Avançados `[STATUS: PENDENTE]`
 
-- [ ] **F6-01**: Motor de Otimização Automática de Grades Horárias (`apps/optimizer`).
-- [ ] **F6-02**: Dashboards analíticos agregados no schema `relatorios`.
-- [ ] **F6-03**: Exportação de relatórios em formatos estruturados (PDF / XLSX / CSV).
+- [ ] **F7-01**: Motor de Otimização Automática de Grades Horárias (`apps/optimizer`).
+- [ ] **F7-02**: Dashboards analíticos agregados no schema `relatorios`.
+- [ ] **F7-03**: Exportação de relatórios em formatos estruturados (PDF / XLSX / CSV).

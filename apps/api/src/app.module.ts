@@ -18,6 +18,7 @@ import { TurmasModule } from './modules/turmas/turmas.module.js';
 import { AgendamentosModule } from './modules/agendamentos/agendamentos.module.js';
 import { FeriadosModule } from './modules/feriados/feriados.module.js';
 import { SubstituicoesModule } from './modules/substituicoes/substituicoes.module.js';
+import { SyncModule } from './modules/sync/sync.module.js';
 import { AuditModule } from './infrastructure/interceptors/audit.module.js';
 import { HttpExceptionFilter } from './infrastructure/filters/http-exception.filter.js';
 
@@ -43,6 +44,7 @@ import { HttpExceptionFilter } from './infrastructure/filters/http-exception.fil
     AgendamentosModule,
     FeriadosModule,
     SubstituicoesModule,
+    SyncModule,
   ],
   controllers: [AppController],
   providers: [

@@ -18,6 +18,8 @@ if "%1"=="10" goto COMPILAR_TUDO
 if "%1"=="11" goto SEED_CARGA
 if "%1"=="12" goto SEED_PRODUCAO
 if "%1"=="13" goto RESET_BANCO
+if "%1"=="14" goto ESPELHAR_BANCO
+if "%1"=="15" goto PROMOVER_TESTE
 if "%1"=="0" goto SAIR
 
 :MENU
@@ -39,6 +41,10 @@ echo   --- PARADA E ENCERRAMENTO ---
 echo   [5]  PARAR TUDO (Encerrar Docker e fechar janelas do Node/SIRA)
 echo   [6]  Parar Apenas Conteineres Docker (docker compose down)
 echo.
+echo   --- SINCRONIZACAO E HOMOLOGACAO (PROD ^<--^> TESTE) ---
+echo   [14] Espelhar Producao para Teste (sira -> sira_teste)
+echo   [15] Promover Cenarios de Teste para Producao (com Senha Admin)
+echo.
 echo   --- CARGA SQL E GESTAO DO BANCO DE DADOS ---
 echo   [11] Aplicar Seed de Teste de Carga (3 Unidades: Cuiaba, Caceres, Rondonopolis)
 echo   [12] Aplicar Seed de Producao Limpa (Apenas RBAC e Roles Essenciais)
@@ -47,14 +53,14 @@ echo.
 echo   --- DIAGNOSTICO E FERRAMENTAS ---
 echo   [7]  Verificar Status e Healthcheck dos Servicos
 echo   [8]  Abrir Aplicacoes no Navegador (Frontend, pgAdmin, API)
-echo   [9]  Executar Testes Automatizados (Auth, RBAC e Conflitos de Horario)
+echo   [9]  Executar Testes Automatizados (Auth, RBAC, Conflitos e Sync)
 echo   [10] Compilar Todo o Sistema (Build Backend API + Build Frontend Web)
 echo.
 echo   [0]  Sair
 echo.
 echo ===============================================================================
 set "OPCAO="
-set /p "OPCAO=>> Digite a opcao desejada [0-13]: "
+set /p "OPCAO=>> Digite a opcao desejada [0-15]: "
 
 if "%OPCAO%"=="1" goto INICIAR_TUDO
 if "%OPCAO%"=="2" goto INICIAR_DOCKER
@@ -69,6 +75,8 @@ if "%OPCAO%"=="10" goto COMPILAR_TUDO
 if "%OPCAO%"=="11" goto SEED_CARGA
 if "%OPCAO%"=="12" goto SEED_PRODUCAO
 if "%OPCAO%"=="13" goto RESET_BANCO
+if "%OPCAO%"=="14" goto ESPELHAR_BANCO
+if "%OPCAO%"=="15" goto PROMOVER_TESTE
 if "%OPCAO%"=="0" goto SAIR
 
 echo.
@@ -365,6 +373,30 @@ timeout /t 6 /nobreak >nul
 docker exec sira-postgres pg_isready -U sira_admin -d sira
 echo.
 echo [SUCESSO] Banco de dados SIRA resetado e recriado com sucesso!
+if not "%1"=="" exit /b 0
+pause
+goto MENU
+
+:ESPELHAR_BANCO
+cls
+echo ===============================================================================
+echo Espelhando Producao para Teste (sira -> sira_teste)...
+echo ===============================================================================
+echo.
+call node scripts\mirror-prod-to-test.mjs
+echo.
+if not "%1"=="" exit /b 0
+pause
+goto MENU
+
+:PROMOVER_TESTE
+cls
+echo ===============================================================================
+echo Promover Cenarios de Teste para Producao (com Senha Admin)
+echo ===============================================================================
+echo.
+call node scripts\promote-test-to-prod.mjs
+echo.
 if not "%1"=="" exit /b 0
 pause
 goto MENU

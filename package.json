@@ -14,7 +14,10 @@
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "seed:prod": "docker exec -i sira-postgres psql -U sira_admin -d sira < database/seeds/01_seed_producao.sql",
-    "seed:load": "docker exec -i sira-postgres psql -U sira_admin -d sira < database/seeds/02_seed_teste_carga.sql"
+    "seed:load": "docker exec -i sira-postgres psql -U sira_admin -d sira < database/seeds/02_seed_teste_carga.sql",
+    "db:mirror": "node scripts/mirror-prod-to-test.mjs",
+    "db:promote": "node scripts/promote-test-to-prod.mjs",
+    "test:sync": "node apps/api/test-sync-flow.mjs"
   },
   "keywords": [
     "sira",

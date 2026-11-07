@@ -44,6 +44,8 @@ Ao abrir o menu, você terá acesso às seguintes opções imediatas:
 - **`[11]` Aplicar Seed de Teste de Carga**: Injeta carga massiva com **3 Unidades SENAI** (Cuiabá, Cáceres e Rondonópolis).
 - **`[12]` Aplicar Seed de Produção Limpa**: Injeta apenas as tabelas essenciais de RBAC, permissões e parâmetros globais.
 - **`[13]` Resetar Banco de Dados**: Destrói volumes Docker (`down -v`) e sobe do zero recriando todas as tabelas.
+- **`[14]` Espelhar Produção para Teste**: Clona com segurança os dados de Produção (`sira`) para o banco de Testes (`sira_teste`).
+- **`[15]` Promover Cenários de Teste para Produção**: Valida conflitos de horário e promove a grade para Produção mediante senha do Admin.
 
 ---
 
@@ -71,7 +73,8 @@ npm run dev:web
 | **Frontend Web SIRA** | [http://localhost:5173](http://localhost:5173) | `admin@sira.local` | `Admin@2026` | Permite também `admin@sira.com` ou `viniciusladeialara@gmail.com` |
 | **Backend API (REST)**| [http://localhost:3000/api/v1](http://localhost:3000/api/v1) | — | — | Documentação e endpoints da API |
 | **pgAdmin 4 (Console)**| [http://localhost:8080](http://localhost:8080) | `admin@sira.com` | `Admin@2026` | Servidor `sira-postgres` já vem pré-configurado na barra lateral |
-| **PostgreSQL 16** | `localhost:5432` | `sira_admin` | `Sira@2026` | Banco: `sira` (Multi-schema) |
+| **PostgreSQL 16 (Produção)** | `localhost:5432` | `sira_admin` | `Sira@2026` | Banco: `sira` (Multi-schema) |
+| **PostgreSQL 16 (Teste/Sandbox)** | `localhost:5432` | `sira_admin` | `Sira@2026` | Banco: `sira_teste` (Isolado para simulação) |
 | **Redis 7** | `localhost:6379` | — | Sem senha | Cache L1/L2, rate limiting e tokens |
 
 > [!NOTE]
