@@ -62,13 +62,13 @@
 - [x] **F2-18**: Injeção e escopo de unidade nas operações via `TenantScopeHelper` e decorador `@CurrentTenant()`.
 
 ### 2.6 Módulos de Domínio do Core
-- [>] **F2-19**: Módulo de Usuários (`UsersModule`): CRUD completo, validação de DTOs com `class-validator`, hashing de senhas.
-- [ ] **F2-20**: Módulo de Unidades (`UnitsModule`): Listagem, ativação/inativação e busca por código/cidade.
-- [ ] **F2-21**: Módulo de Perfis e Permissões (`RolesModule`): Consulta de catálogo e atribuição de perfis a usuários.
+- [x] **F2-19**: Módulo de Usuários (`UsersModule`): CRUD completo, validação de DTOs com `class-validator`, hashing de senhas bcrypt e vínculos RBAC.
+- [x] **F2-20**: Módulo de Unidades (`UnitsModule`): Listagem, ativação/inativação e busca por código/cidade.
+- [x] **F2-21**: Módulo de Perfis e Permissões (`RolesModule`): Consulta de catálogo de perfis e permissões.
 
 ### 2.7 Auditoria & Tratamento Global
-- [ ] **F2-22**: Criação do `AuditInterceptor` para captura de mutações (POST/PUT/DELETE) e persistência em `auditoria.logs`.
-- [ ] **F2-23**: Criação do `HttpExceptionFilter` padronizado conforme especificação RFC 7807 (Problem Details).
+- [x] **F2-22**: Criação do `AuditInterceptor` para captura de mutações (POST/PUT/PATCH/DELETE) e persistência em `auditoria.logs`.
+- [x] **F2-23**: Criação do `HttpExceptionFilter` padronizado conforme especificação RFC 7807 (Problem Details).
 - [ ] **F2-24**: Configuração do logger estruturado com Winston (JSON / traceId).
 
 ### 2.8 Documentação & Testes
