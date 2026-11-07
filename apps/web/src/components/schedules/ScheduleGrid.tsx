@@ -5,7 +5,7 @@ import { formatInTimeZone } from "@/lib/date-utils";
 import { ptBR } from "date-fns/locale";
 import { clsx } from "clsx";
 import { Building, Users, Hash, CalendarDays, Plus } from "lucide-react";
-import { Timestamp } from "firebase/firestore";
+import { Timestamp } from "@/lib/sira-sql-adapter";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

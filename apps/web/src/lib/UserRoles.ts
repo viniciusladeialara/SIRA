@@ -11,7 +11,7 @@ export enum UserRole {
   PARTNER_SCHOOL = 'PARTNER_SCHOOL'
 }
 
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp } from "@/lib/sira-sql-adapter";
 
 /**
  * Interface para escopo de acesso do usuário

@@ -99,8 +99,10 @@
 - [x] **F5-05**: Configuração de aliases no `vite.config.ts` redirecionando SDKs do Firebase para a API NestJS + PostgreSQL em localhost.
 - [x] **F5-06**: Ajuste de porta do frontend para `5173` evitando conflito com o console do pgAdmin (`8080`).
 - [x] **F5-07**: Atualização do `AuthContext.tsx` e `usePermissions.tsx` com suporte a `admin@sira.local` e RBAC SIRA.
-- [x] **F5-08**: Build de produção do frontend concluído com **0 erros** (3474 módulos empacotados).
+- [x] **F5-08**: Build de produção do frontend concluído com **0 erros** (3473 módulos empacotados).
 - [x] **F5-09**: Scripts de desenvolvimento adicionados ao `package.json` da raiz do Monorepo.
+- [x] **F5-10**: Remoção completa de arquivos, regras, mocks e funções legadas do Firebase; migração de 53 componentes para a camada nativa SIRA SQL (`@/lib/db`, `@/lib/sira-sql-adapter`).
+- [x] **F5-11**: Criação do script interativo de operações `menu.bat` na raiz com healthcheck, delays de inicialização segura e comandos de orquestração completa.
 
 ---
 

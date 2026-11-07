@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from "@/lib/AuthContext";
-import { db } from "@/lib/firebase";
+import { db } from "@/lib/db";
 import { 
   collection, 
   query, 
@@ -12,7 +12,7 @@ import {
   doc,
   orderBy,
   Timestamp, getDocs, setDoc, writeBatch
-} from 'firebase/firestore';
+} from "@/lib/sira-sql-adapter";
 import { 
   startOfWeek, 
   addDays, 

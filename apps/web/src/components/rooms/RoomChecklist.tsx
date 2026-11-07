@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { collection, addDoc, getDocs, query, where, Timestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { collection, addDoc, getDocs, query, where, Timestamp } from "@/lib/sira-sql-adapter";
+import { db } from "@/lib/db";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader, CheckCircle2 } from "lucide-react";
 

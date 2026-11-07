@@ -7,8 +7,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { auth } from "@/lib/firebase";
-import { signInWithEmailAndPassword, setPersistence, browserSessionPersistence, sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "@/lib/db";
+import { signInWithEmailAndPassword, setPersistence, browserSessionPersistence, sendPasswordResetEmail } from "@/lib/sira-auth-adapter";
 import { useAuth } from "@/lib/AuthContext";
 import "./Login.css";
 

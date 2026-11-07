@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { db, auth } from "@/lib/firebase";
-import { collection, onSnapshot, query, where, getDocs } from "firebase/firestore";
-import { onAuthStateChanged, User } from "firebase/auth";
+import { db, auth } from "@/lib/db";
+import { collection, onSnapshot, query, where, getDocs } from "@/lib/sira-sql-adapter";
+import { onAuthStateChanged, User } from "@/lib/sira-auth-adapter";
 import { 
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
     BarChart, Bar, PieChart, Pie, Cell, Legend, LabelList, AreaChart, Area

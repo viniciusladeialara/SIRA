@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { auth } from "@/lib/firebase";
-import { verifyPasswordResetCode, confirmPasswordReset, signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/db";
+import { verifyPasswordResetCode, confirmPasswordReset, signInWithEmailAndPassword } from "@/lib/sira-auth-adapter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

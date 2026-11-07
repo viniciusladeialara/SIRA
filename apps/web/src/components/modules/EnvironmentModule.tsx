@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 // Importa a nossa instância do Firestore (db) e as funções necessárias
-import { db } from "@/lib/firebase";
-import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, where, getDocs, writeBatch, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/db";
+import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, where, getDocs, writeBatch, serverTimestamp } from "@/lib/sira-sql-adapter";
 
 // --- Componentes de UI ---
 import { Button } from "@/components/ui/button";

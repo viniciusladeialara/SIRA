@@ -8,8 +8,8 @@ import { fetchTeacherSchedules, Schedule } from "@/services/reservationService";
 import { subscribeToSchedules } from "@/services/scheduleService";
 import { fetchRooms, subscribeToHolidays } from "@/services/dataService";
 import { useAuth } from "@/lib/AuthContext";
-import { db } from "@/lib/firebase";
-import { doc, getDoc, collection, getDocs, updateDoc, Timestamp, query, where, onSnapshot } from "firebase/firestore";
+import { db } from "@/lib/db";
+import { doc, getDoc, collection, getDocs, updateDoc, Timestamp, query, where, onSnapshot } from "@/lib/sira-sql-adapter";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useSystemConfig } from "@/hooks/useSystemConfig";
 

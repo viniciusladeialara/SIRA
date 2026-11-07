@@ -2,7 +2,7 @@ import React, { ReactNode } from "react";
 import { format } from "date-fns";
 import { formatInTimeZone, getHoursInTimeZone } from "@/lib/date-utils";
 import { User, Trash2, Edit2, Calendar, Download } from "lucide-react";
-import { Timestamp } from "firebase/firestore";
+import { Timestamp } from "@/lib/sira-sql-adapter";
 import { clsx } from "clsx";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

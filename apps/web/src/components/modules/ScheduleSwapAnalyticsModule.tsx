@@ -5,8 +5,8 @@
  */
 
 import { useState, useEffect } from "react";
-import { db } from "@/lib/firebase";
-import { collection, onSnapshot, query, where, getDocs } from "firebase/firestore";
+import { db } from "@/lib/db";
+import { collection, onSnapshot, query, where, getDocs } from "@/lib/sira-sql-adapter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {

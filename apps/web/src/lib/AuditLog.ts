@@ -1,8 +1,8 @@
 // src/lib/AuditLog.ts
 
-import { db } from "./firebase";
-import { collection, addDoc, Timestamp, query, orderBy, limit, getDocs, startAfter, QueryDocumentSnapshot, DocumentData, where } from "firebase/firestore";
-import { User } from "firebase/auth";
+import { db } from "./db";
+import { collection, addDoc, Timestamp, query, orderBy, limit, getDocs, startAfter, QueryDocumentSnapshot, DocumentData, where } from "@/lib/sira-sql-adapter";
+import { User } from "@/lib/sira-auth-adapter";
 
 /**
  * Tipos de ações que podem ser registradas

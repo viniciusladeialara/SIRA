@@ -3,7 +3,7 @@
  * @description Serviço para gestão de vistorias (Check-in / Check-out), cadeia de custódia e ocorrências de itens em salas/laboratórios.
  */
 
-import { db, storage } from "@/lib/firebase";
+import { db, storage } from "@/lib/db";
 import { 
     collection, 
     addDoc, 
@@ -16,7 +16,7 @@ import {
     getDocs, 
     onSnapshot, 
     Timestamp 
-} from "firebase/firestore";
+} from "@/lib/sira-sql-adapter";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { logAction, AuditAction } from "@/lib/AuditLog";
 

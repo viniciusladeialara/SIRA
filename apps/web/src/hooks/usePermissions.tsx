@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { UserRole, UserWithRole, hasPermission, getModulePermissions } from '@/lib/UserRoles';
-import { auth, db } from '@/lib/firebase';
-import { signOut } from 'firebase/auth';
-import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore'; 
+import { auth, db } from "@/lib/db";
+import { signOut } from "@/lib/sira-auth-adapter";
+import { doc, getDoc, updateDoc, onSnapshot } from "@/lib/sira-sql-adapter"; 
 
 /**
  * Hook para gerenciar permissões do usuário

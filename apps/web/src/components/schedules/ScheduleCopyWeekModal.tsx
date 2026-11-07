@@ -46,8 +46,8 @@ import {
   ShieldCheck,
   CalendarDays
 } from 'lucide-react';
-import { collection, writeBatch, doc, Timestamp, getDocs, query, where } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { collection, writeBatch, doc, Timestamp, getDocs, query, where } from "@/lib/sira-sql-adapter";
+import { db } from "@/lib/db";
 import { useToast } from '@/hooks/use-toast';
 import { logAction, AuditAction } from '@/lib/AuditLog';
 import { useAuth } from '@/lib/AuthContext';

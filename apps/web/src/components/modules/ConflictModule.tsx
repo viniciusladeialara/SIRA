@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Timestamp } from "firebase/firestore";
+import { Timestamp } from "@/lib/sira-sql-adapter";
 import { startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, format, getHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { AlertCircle, AlertTriangle, Calendar, MapPin, User, Users, CheckCircle2 } from "lucide-react";

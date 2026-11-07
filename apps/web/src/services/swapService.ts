@@ -1,6 +1,6 @@
-import { db, functions } from "@/lib/firebase";
-import { collection, query, where, getDocs, Timestamp, addDoc, doc, updateDoc, getDoc, runTransaction } from "firebase/firestore";
-import { httpsCallable } from "firebase/functions";
+import { db, functions } from "@/lib/db";
+import { collection, query, where, getDocs, Timestamp, addDoc, doc, updateDoc, getDoc, runTransaction } from "@/lib/sira-sql-adapter";
+import { httpsCallable } from "@/lib/sira-functions-adapter";
 import { Schedule } from "./reservationService";
 import { startOfDay, endOfDay } from "date-fns";
 

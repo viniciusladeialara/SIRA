@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "firebase/firestore": path.resolve(__dirname, "./src/lib/sira-firestore-adapter.ts"),
+      "firebase/firestore": path.resolve(__dirname, "./src/lib/sira-sql-adapter.ts"),
       "firebase/auth": path.resolve(__dirname, "./src/lib/sira-auth-adapter.ts"),
       "firebase/functions": path.resolve(__dirname, "./src/lib/sira-functions-adapter.ts"),
     },

@@ -8,8 +8,8 @@ import { BookOpen, Loader2, Sparkles, Shield, Link2, Trash2, AlertTriangle, Chec
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { db } from '@/lib/firebase';
-import { collection, getDocs, deleteDoc, doc, writeBatch, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from "@/lib/db";
+import { collection, getDocs, deleteDoc, doc, writeBatch, updateDoc, serverTimestamp } from "@/lib/sira-sql-adapter";
 import { PageLayout, PageHeader, PageContent } from "@/components/ui/page-layout";
 
 export const SystemSettingsModule: React.FC = () => {

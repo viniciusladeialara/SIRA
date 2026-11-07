@@ -3,11 +3,11 @@ import { useAuth } from '@/lib/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { UserRole, UserWithRole, UserScope, UserStatus, sharesUnit, canManageUser } from '@/lib/UserRoles';
 import { logAction, AuditAction } from '@/lib/AuditLog';
-import { db, auth } from '@/lib/firebase';
-import { collection, onSnapshot, updateDoc, deleteDoc, doc, getDocs, setDoc } from 'firebase/firestore';
+import { db, auth } from "@/lib/db";
+import { collection, onSnapshot, updateDoc, deleteDoc, doc, getDocs, setDoc } from "@/lib/sira-sql-adapter";
 
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
+import { httpsCallable } from "@/lib/sira-functions-adapter";
+import { functions } from "@/lib/db";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';

@@ -7,8 +7,8 @@ import Dashboard from "@/components/Dashboard";
 
 // NOVAS IMPORTAÇÕES PARA O FIREBASE
 // Importa a instância de autenticação e as funções necessárias
-import { auth } from "@/lib/firebase";
-import { onAuthStateChanged, User } from "firebase/auth";
+import { auth } from "@/lib/db";
+import { onAuthStateChanged, User } from "@/lib/sira-auth-adapter";
 
 const Index = () => {
   // O estado agora irá guardar o objeto do utilizador do Firebase

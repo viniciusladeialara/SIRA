@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { db } from '@/lib/firebase';
-import { doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { db } from "@/lib/db";
+import { doc, setDoc, onSnapshot } from "@/lib/sira-sql-adapter";
 
 export type LoginVariant = 'senai' | 'animation' | 'futuristic';
 

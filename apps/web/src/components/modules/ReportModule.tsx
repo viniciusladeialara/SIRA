@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { db } from "@/lib/firebase";
+import { db } from "@/lib/db";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/lib/AuthContext";
 import {
@@ -8,7 +8,7 @@ import {
     query,
     limit,
     Timestamp,
-} from "firebase/firestore";
+} from "@/lib/sira-sql-adapter";
 import { format, parseISO, differenceInHours, differenceInMinutes, isValid } from "date-fns";
 import { ptBR } from "date-fns/locale";
 

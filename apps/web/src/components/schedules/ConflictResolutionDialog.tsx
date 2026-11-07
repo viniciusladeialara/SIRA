@@ -11,9 +11,9 @@ import { useToast } from "@/hooks/use-toast";
 import { resolveScheduleConflict } from "@/services/scheduleService";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Timestamp, collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
+import { Timestamp, collection, query, where, getDocs, doc, getDoc } from "@/lib/sira-sql-adapter";
 import { startOfDay, endOfDay } from "date-fns";
-import { db } from "@/lib/firebase";
+import { db } from "@/lib/db";
 import { Loader2 } from "lucide-react";
 
 interface ConflictResolutionDialogProps {

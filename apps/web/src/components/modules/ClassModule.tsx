@@ -12,10 +12,10 @@ import {
   getDocs,
   where,
   writeBatch
-} from "firebase/firestore";
-import { httpsCallable } from "firebase/functions";
-import { functions } from "@/lib/firebase";
-import { db } from "@/lib/firebase";
+} from "@/lib/sira-sql-adapter";
+import { httpsCallable } from "@/lib/sira-functions-adapter";
+import { functions } from "@/lib/db";
+import { db } from "@/lib/db";
 import { useAuth } from "@/lib/AuthContext";
 import { logAction, AuditAction } from "@/lib/AuditLog";
 import { getUnitName } from "@/lib/utils";

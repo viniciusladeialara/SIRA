@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { auth, db } from "@/lib/firebase";
-import { updatePassword, signOut } from "firebase/auth";
-import { doc, updateDoc, writeBatch, Timestamp } from "firebase/firestore";
+import { auth, db } from "@/lib/db";
+import { updatePassword, signOut } from "@/lib/sira-auth-adapter";
+import { doc, updateDoc, writeBatch, Timestamp } from "@/lib/sira-sql-adapter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";

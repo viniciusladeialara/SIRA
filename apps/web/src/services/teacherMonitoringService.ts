@@ -1,4 +1,4 @@
-import { db } from "@/lib/firebase";
+import { db } from "@/lib/db";
 import {
   collection,
   doc,
@@ -9,7 +9,7 @@ import {
   where,
   onSnapshot,
   serverTimestamp,
-} from "firebase/firestore";
+} from "@/lib/sira-sql-adapter";
 import { differenceInDays, parseISO, isAfter, isBefore, addDays, endOfMonth } from "date-fns";
 
 export type MonitoringStatus = "pendente" | "em_andamento" | "concluido" | "dispensado";

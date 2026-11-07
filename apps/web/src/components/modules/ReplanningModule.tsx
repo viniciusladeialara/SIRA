@@ -4,8 +4,8 @@
  */
 
 import React, { useState, useEffect, useMemo } from "react";
-import { db } from "@/lib/firebase";
-import { collection, onSnapshot, addDoc, updateDoc, doc, Timestamp, getDocs } from "firebase/firestore";
+import { db } from "@/lib/db";
+import { collection, onSnapshot, addDoc, updateDoc, doc, Timestamp, getDocs } from "@/lib/sira-sql-adapter";
 import { updateSchedule } from "@/services/scheduleService";
 import { format, parse, isAfter, startOfDay, endOfDay, isSameDay, isWithinInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';

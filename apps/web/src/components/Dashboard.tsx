@@ -23,8 +23,8 @@ import "@/core/registeredModules"; // Assegura o registro de todos os módulos n
 
 import { subscribeToConflicts } from "@/services/scheduleService";
 import { useSystemConfig } from "@/hooks/useSystemConfig";
-import { db } from "@/lib/firebase";
-import { collection, getDocs, doc, updateDoc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/db";
+import { collection, getDocs, doc, updateDoc, getDoc, setDoc, serverTimestamp } from "@/lib/sira-sql-adapter";
 
 const UserSettingsModal = React.lazy(() => import("./users/UserSettingsModal").then(m => ({ default: m.UserSettingsModal })));
 

@@ -1,7 +1,7 @@
 import { Timestamp } from "@/lib/timestamp";
 import { apiService } from "./apiService";
-import { db } from "@/lib/firebase";
-import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/db";
+import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from "@/lib/sira-sql-adapter";
 
 export type HiringStepStatus = "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" | "BLOCKED";
 

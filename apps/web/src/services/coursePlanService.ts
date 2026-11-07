@@ -1,5 +1,5 @@
-import { collection, doc, getDocs, getDoc, query, where, addDoc, updateDoc, deleteDoc, writeBatch } from "firebase/firestore";
-import { db } from "../lib/firebase";
+import { collection, doc, getDocs, getDoc, query, where, addDoc, updateDoc, deleteDoc, writeBatch } from "@/lib/sira-sql-adapter";
+import { db } from "../lib/db";
 import { logger } from "../lib/logger";
 
 // --- Interfaces ---

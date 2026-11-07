@@ -6,8 +6,8 @@
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { db } from "@/lib/firebase";
-import { collection, onSnapshot, Timestamp } from "firebase/firestore";
+import { db } from "@/lib/db";
+import { collection, onSnapshot, Timestamp } from "@/lib/sira-sql-adapter";
 import { 
     format, 
     isSameDay, 

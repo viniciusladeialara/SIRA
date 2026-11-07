@@ -2,8 +2,8 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { logAction, AuditAction } from "@/lib/AuditLog";
-import { db } from "@/lib/firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { db } from "@/lib/db";
+import { collection, getDocs } from "@/lib/sira-sql-adapter";
 import * as XLSX from "xlsx";
 import {
   format,

@@ -1,4 +1,4 @@
-import { db } from '@/lib/firebase';
+import { db } from "@/lib/db";
 import {
   collection,
   doc,
@@ -9,7 +9,7 @@ import {
   orderBy,
   limit,
   onSnapshot,
-} from 'firebase/firestore';
+} from "@/lib/sira-sql-adapter";
 import * as XLSX from 'xlsx';
 import {
   CoreEvent,

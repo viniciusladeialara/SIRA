@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from "react";
-import { db } from "@/lib/firebase";
+import { db } from "@/lib/db";
 import { 
   collection, 
   onSnapshot, 
@@ -17,7 +17,7 @@ import {
   getDocs,
   where,
   writeBatch
-} from "firebase/firestore";
+} from "@/lib/sira-sql-adapter";
 import { useAuth } from "@/lib/AuthContext";
 import { logAction, AuditAction } from "@/lib/AuditLog";
 

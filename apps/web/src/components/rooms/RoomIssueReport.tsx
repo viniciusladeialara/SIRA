@@ -6,8 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 
 import { useToast } from "@/components/ui/use-toast";
-import { collection, addDoc, Timestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { collection, addDoc, Timestamp } from "@/lib/sira-sql-adapter";
+import { db } from "@/lib/db";
 
 import { Loader, AlertTriangle } from "lucide-react";
 

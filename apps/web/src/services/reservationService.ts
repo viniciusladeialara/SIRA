@@ -1,6 +1,6 @@
-import { db, functions, auth } from "@/lib/firebase";
-import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
-import { httpsCallable } from "firebase/functions";
+import { db, functions, auth } from "@/lib/db";
+import { collection, query, where, getDocs, Timestamp } from "@/lib/sira-sql-adapter";
+import { httpsCallable } from "@/lib/sira-functions-adapter";
 import { startOfDay, endOfMonth, addDays, subDays } from "date-fns";
 
 export interface Schedule {

@@ -1,8 +1,8 @@
 // --- Importações de Bibliotecas e Módulos ---
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { db } from "@/lib/firebase";
-import { collection, onSnapshot, query, where, Timestamp, orderBy, limit } from "firebase/firestore";
+import { db } from "@/lib/db";
+import { collection, onSnapshot, query, where, Timestamp, orderBy, limit } from "@/lib/sira-sql-adapter";
 import {
   startOfMonth, endOfMonth, addMonths, subMonths, format, eachDayOfInterval, getDay, getHours,
   isSameDay, isWithinInterval, startOfWeek, endOfWeek

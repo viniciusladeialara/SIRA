@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { updateSchedule } from "@/services/scheduleService";
-import { Timestamp } from "firebase/firestore";
+import { Timestamp } from "@/lib/sira-sql-adapter";
 import { Search, AlertCircle, XCircle, Calendar, Download, CalendarClock } from "lucide-react";
 import { getUnitName } from "@/lib/utils";
 import { generateGoogleCalendarUrl, downloadIcsFile } from "@/lib/calendarExport";

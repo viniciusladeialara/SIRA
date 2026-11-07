@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { auth } from "@/lib/firebase";
+import { auth } from "@/lib/db";
 import {
   browserSessionPersistence,
   sendPasswordResetEmail,
   setPersistence,
   signInWithEmailAndPassword,
-} from "firebase/auth";
+} from "@/lib/sira-auth-adapter";
 import { useAuth } from "@/lib/AuthContext";
 
 type LampModelProps = {

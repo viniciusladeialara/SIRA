@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { db } from "@/lib/firebase";
+import { db } from "@/lib/db";
 import { 
   collection, 
   query, 
@@ -11,7 +11,7 @@ import {
   orderBy,
   setDoc,
   deleteDoc
-} from "firebase/firestore";
+} from "@/lib/sira-sql-adapter";
 import { useAuth } from "@/lib/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import * as XLSX from "xlsx";

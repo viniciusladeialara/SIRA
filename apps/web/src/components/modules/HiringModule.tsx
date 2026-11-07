@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
-import { db, functions } from '@/lib/firebase';
-import { collection, onSnapshot, query, orderBy, Timestamp } from 'firebase/firestore';
-import { httpsCallable } from 'firebase/functions';
+import { db, functions } from "@/lib/db";
+import { collection, onSnapshot, query, orderBy, Timestamp } from "@/lib/sira-sql-adapter";
+import { httpsCallable } from "@/lib/sira-functions-adapter";
 import { 
   Card, 
   CardContent, 

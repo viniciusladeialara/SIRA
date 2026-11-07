@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { db } from '@/lib/firebase';
-import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { db } from "@/lib/db";
+import { doc, updateDoc, arrayUnion } from "@/lib/sira-sql-adapter";
 import { useToast } from '@/hooks/use-toast';
 
 interface DynamicCreatableSelectProps {

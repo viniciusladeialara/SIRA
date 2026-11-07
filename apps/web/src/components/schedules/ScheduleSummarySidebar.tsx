@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Users, Building, AlertTriangle } from "lucide-react";
-import { Timestamp } from "firebase/firestore";
+import { Timestamp } from "@/lib/sira-sql-adapter";
 
 interface Schedule {
   id: string;

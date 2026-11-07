@@ -8,8 +8,8 @@
 
 // --- IMPORTAÇÕES ---
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Timestamp, doc, onSnapshot } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { Timestamp, doc, onSnapshot } from "@/lib/sira-sql-adapter";
+import { db } from "@/lib/db";
 import { startOfWeek, endOfWeek, format, eachDayOfInterval, isSameDay, getHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from "@/hooks/use-toast";

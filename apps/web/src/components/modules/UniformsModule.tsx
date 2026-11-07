@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { db } from "@/lib/firebase";
-import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, where, getDocs, Timestamp, orderBy, writeBatch, limit } from "firebase/firestore";
+import { db } from "@/lib/db";
+import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, where, getDocs, Timestamp, orderBy, writeBatch, limit } from "@/lib/sira-sql-adapter";
 import { useAuth } from "@/lib/AuthContext";
 import {
     Package, ArrowUpRight, ArrowDownRight, AlertTriangle, RefreshCw, Loader,

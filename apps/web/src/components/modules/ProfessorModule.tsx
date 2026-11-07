@@ -1,8 +1,8 @@
 // --- Importações de Bibliotecas e Módulos ---
 import { useState, useEffect } from "react";
 // Importa a instância do nosso banco de dados do Firebase
-import { db, functions } from "@/lib/firebase";
-import { httpsCallable } from "firebase/functions";
+import { db, functions } from "@/lib/db";
+import { httpsCallable } from "@/lib/sira-functions-adapter";
 // Importa as funções do Firestore para interagir com o banco de dados
 // collection: para referenciar uma coleção de documentos
 // onSnapshot: para ouvir em tempo real as mudanças em uma coleção
@@ -13,7 +13,7 @@ import { httpsCallable } from "firebase/functions";
 // query: para construir uma consulta ao banco de dados
 // where: para filtrar a consulta com base em uma condição (ex: email duplicado)
 // getDocs: para obter os documentos de uma consulta de forma única (não em tempo real)
-import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, where, getDocs, writeBatch, setDoc } from "firebase/firestore";
+import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, where, getDocs, writeBatch, setDoc } from "@/lib/sira-sql-adapter";
 // Importa biblioteca para processar arquivos Excel
 import * as XLSX from 'xlsx';
 

@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
-import { db } from "@/lib/firebase";
+import { db } from "@/lib/db";
 import { 
     collection, 
     onSnapshot, 
     query, 
     where, 
     orderBy 
-} from "firebase/firestore";
+} from "@/lib/sira-sql-adapter";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/lib/AuthContext";
 import { 

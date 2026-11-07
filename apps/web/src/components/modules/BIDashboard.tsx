@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { db } from "@/lib/firebase";
-import { collection, getDocs, query } from "firebase/firestore";
+import { db } from "@/lib/db";
+import { collection, getDocs, query } from "@/lib/sira-sql-adapter";
 import { 
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
     BarChart, Bar, PieChart, Pie, Cell, Legend, LabelList

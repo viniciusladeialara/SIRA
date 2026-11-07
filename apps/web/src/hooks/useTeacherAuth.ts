@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { auth, db } from "@/lib/firebase";
-import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "@/lib/db";
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from "@/lib/sira-auth-adapter";
+import { doc, getDoc } from "@/lib/sira-sql-adapter";
 
 export interface TeacherData {
     id: string; // Auth UID
