@@ -11,15 +11,15 @@ if "%1"=="3" goto INICIAR_BACKEND
 if "%1"=="4" goto INICIAR_FRONTEND
 if "%1"=="5" goto PARAR_TUDO
 if "%1"=="6" goto PARAR_DOCKER
-if "%1"=="7" goto STATUS
-if "%1"=="8" goto ABRIR_NAVEGADOR
-if "%1"=="9" goto EXECUTAR_TESTES
-if "%1"=="10" goto COMPILAR_TUDO
-if "%1"=="11" goto SEED_CARGA
-if "%1"=="12" goto SEED_PRODUCAO
-if "%1"=="13" goto RESET_BANCO
-if "%1"=="14" goto ESPELHAR_BANCO
-if "%1"=="15" goto PROMOVER_TESTE
+if "%1"=="7" goto SEED_CARGA
+if "%1"=="8" goto SEED_PRODUCAO
+if "%1"=="9" goto RESET_BANCO
+if "%1"=="10" goto ESPELHAR_BANCO
+if "%1"=="11" goto PROMOVER_TESTE
+if "%1"=="12" goto STATUS
+if "%1"=="13" goto ABRIR_NAVEGADOR
+if "%1"=="14" goto EXECUTAR_TESTES
+if "%1"=="15" goto COMPILAR_TUDO
 if "%1"=="0" goto SAIR
 
 :MENU
@@ -38,23 +38,23 @@ echo   [3]  Iniciar Apenas Backend API (NestJS na porta 3000)
 echo   [4]  Iniciar Apenas Frontend Web (Vite / React na porta 5173)
 echo.
 echo   --- PARADA E ENCERRAMENTO ---
-echo   [5]  PARAR TUDO (Encerrar Docker e fechar janelas do Node/SIRA)
+echo   [5]  PARAR TUDO (Encerrar Docker, fechar janelas e liberar portas 3000/5173)
 echo   [6]  Parar Apenas Conteineres Docker (docker compose down)
 echo.
-echo   --- SINCRONIZACAO E HOMOLOGACAO (PROD ^<--^> TESTE) ---
-echo   [14] Espelhar Producao para Teste (sira -> sira_teste)
-echo   [15] Promover Cenarios de Teste para Producao (com Senha Admin)
+echo   --- BANCO DE DADOS E CARGAS SQL ---
+echo   [7]  Aplicar Carga de Teste (3 Unidades: Cuiaba, Caceres, Rondonopolis)
+echo   [8]  Aplicar Carga Limpa de Producao (Apenas RBAC e Roles Essenciais)
+echo   [9]  Resetar Banco de Dados (docker compose down -v && docker compose up -d)
 echo.
-echo   --- CARGA SQL E GESTAO DO BANCO DE DADOS ---
-echo   [11] Aplicar Seed de Teste de Carga (3 Unidades: Cuiaba, Caceres, Rondonopolis)
-echo   [12] Aplicar Seed de Producao Limpa (Apenas RBAC e Roles Essenciais)
-echo   [13] Resetar Banco de Dados (docker compose down -v && docker compose up -d)
+echo   --- HOMOLOGACAO E SINCRONIZACAO (PROD ^<--^> TESTE) ---
+echo   [10] Espelhar Producao para Teste (sira -> sira_teste)
+echo   [11] Promover Cenarios de Teste para Producao (com Senha Admin)
 echo.
 echo   --- DIAGNOSTICO E FERRAMENTAS ---
-echo   [7]  Verificar Status e Healthcheck dos Servicos
-echo   [8]  Abrir Aplicacoes no Navegador (Frontend, pgAdmin, API)
-echo   [9]  Executar Testes Automatizados (Auth, RBAC, Conflitos e Sync)
-echo   [10] Compilar Todo o Sistema (Build Backend API + Build Frontend Web)
+echo   [12] Verificar Status e Conectividade dos Servicos
+echo   [13] Abrir Aplicacoes no Navegador (Frontend, pgAdmin, API)
+echo   [14] Executar Testes Automatizados (Auth, RBAC, Conflitos e Sync)
+echo   [15] Compilar Todo o Sistema (Build Backend API + Build Frontend Web)
 echo.
 echo   [0]  Sair
 echo.
@@ -62,25 +62,29 @@ echo ===========================================================================
 set "OPCAO="
 set /p "OPCAO=>> Digite a opcao desejada [0-15]: "
 
-if "%OPCAO%"=="1" goto INICIAR_TUDO
-if "%OPCAO%"=="2" goto INICIAR_DOCKER
-if "%OPCAO%"=="3" goto INICIAR_BACKEND
-if "%OPCAO%"=="4" goto INICIAR_FRONTEND
-if "%OPCAO%"=="5" goto PARAR_TUDO
-if "%OPCAO%"=="6" goto PARAR_DOCKER
-if "%OPCAO%"=="7" goto STATUS
-if "%OPCAO%"=="8" goto ABRIR_NAVEGADOR
-if "%OPCAO%"=="9" goto EXECUTAR_TESTES
-if "%OPCAO%"=="10" goto COMPILAR_TUDO
-if "%OPCAO%"=="11" goto SEED_CARGA
-if "%OPCAO%"=="12" goto SEED_PRODUCAO
-if "%OPCAO%"=="13" goto RESET_BANCO
-if "%OPCAO%"=="14" goto ESPELHAR_BANCO
-if "%OPCAO%"=="15" goto PROMOVER_TESTE
-if "%OPCAO%"=="0" goto SAIR
+:: Limpa espacos em branco da entrada
+set "OPCAO=!OPCAO: =!"
+
+if "!OPCAO!"=="1" goto INICIAR_TUDO
+if "!OPCAO!"=="2" goto INICIAR_DOCKER
+if "!OPCAO!"=="3" goto INICIAR_BACKEND
+if "!OPCAO!"=="4" goto INICIAR_FRONTEND
+if "!OPCAO!"=="5" goto PARAR_TUDO
+if "!OPCAO!"=="6" goto PARAR_DOCKER
+if "!OPCAO!"=="7" goto SEED_CARGA
+if "!OPCAO!"=="8" goto SEED_PRODUCAO
+if "!OPCAO!"=="9" goto RESET_BANCO
+if "!OPCAO!"=="10" goto ESPELHAR_BANCO
+if "!OPCAO!"=="11" goto PROMOVER_TESTE
+if "!OPCAO!"=="12" goto STATUS
+if "!OPCAO!"=="13" goto ABRIR_NAVEGADOR
+if "!OPCAO!"=="14" goto EXECUTAR_TESTES
+if "!OPCAO!"=="15" goto COMPILAR_TUDO
+if "!OPCAO!"=="0" goto SAIR
 
 echo.
-echo [!] Opcao invalida! Pressione qualquer tecla para retornar ao menu.
+echo [!] Opcao invalida [!OPCAO!]! Digite um numero de 0 a 15.
+echo Pressione qualquer tecla para retornar ao menu.
 pause >nul
 goto MENU
 
@@ -210,13 +214,18 @@ echo ===========================================================================
 echo Parando todos os servicos do SIRA (Docker + Processos Node)...
 echo ===============================================================================
 echo.
-echo [1/2] Parando conteineres Docker...
+echo [1/3] Parando conteineres Docker...
 docker compose down
 echo.
-echo [2/2] Fechando janelas ativas da API e Frontend SIRA...
+echo [2/3] Fechando janelas ativas da API e Frontend SIRA...
 taskkill /F /FI "WINDOWTITLE eq SIRA*" >nul 2>&1
 echo.
-echo [OK] Todos os servicos foram encerrados com sucesso!
+echo [3/3] Liberando portas 3000 e 5173 caso existam processos em segundo plano...
+for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr ":3000 :5173"') do (
+    taskkill /F /PID %%a >nul 2>&1
+)
+echo.
+echo [OK] Todos os servicos e portas foram liberados com sucesso!
 if not "%1"=="" exit /b 0
 pause
 goto MENU
@@ -234,6 +243,108 @@ if not "%1"=="" exit /b 0
 pause
 goto MENU
 
+:SEED_CARGA
+cls
+echo ===============================================================================
+echo Aplicando Seed de Teste de Carga (02_seed_teste_carga.sql)...
+echo Injetando 3 Unidades SENAI (Cuiaba, Caceres, Rondonopolis), Cursos, Ambientes, etc.
+echo ===============================================================================
+echo.
+call npm run seed:load
+if %ERRORLEVEL% EQU 0 (
+    echo.
+    echo [SUCESSO] Seed de teste de carga aplicado com exito!
+) else (
+    echo.
+    echo [ERRO] Falha ao aplicar o seed de teste de carga.
+)
+if not "%1"=="" exit /b 0
+pause
+goto MENU
+
+:SEED_PRODUCAO
+cls
+echo ===============================================================================
+echo Aplicando Seed de Producao Limpa (01_seed_producao.sql)...
+echo Injetando Roles RBAC, Permissoes Essenciais e Configuracoes Globais...
+echo ===============================================================================
+echo.
+call npm run seed:prod
+if %ERRORLEVEL% EQU 0 (
+    echo.
+    echo [SUCESSO] Seed de producao limpa aplicado com exito!
+) else (
+    echo.
+    echo [ERRO] Falha ao aplicar o seed de producao.
+)
+if not "%1"=="" exit /b 0
+pause
+goto MENU
+
+:RESET_BANCO
+cls
+echo ===============================================================================
+echo ATENCAO: Esta operacao ira limpar todos os volumes do PostgreSQL e recriar
+echo todos os schemas e tabelas a partir dos scripts em database/init/!
+echo ===============================================================================
+set "CONFIRMA="
+set /p "CONFIRMA=Deseja realmente continuar? (S/N): "
+if /i not "!CONFIRMA!"=="S" goto MENU
+echo.
+echo [1/3] Parando conteineres e destruindo volumes antigos...
+docker compose down -v
+echo.
+echo [2/3] Subindo conteineres com inicializacao automatica das tabelas...
+docker compose up -d
+echo.
+echo [3/3] Aguardando banco inicializar com verificacao de saude...
+set /a tentativas=0
+:LOOP_RESET_CHECK
+set /a tentativas+=1
+timeout /t 2 /nobreak >nul
+docker exec sira-postgres pg_isready -U sira_admin -d sira >nul 2>&1
+if %ERRORLEVEL% EQU 0 (
+    echo [OK] PostgreSQL pronto e tabelas recriadas!
+    goto RESET_CONCLUIDO
+)
+if %tentativas% GEQ 15 (
+    echo [AVISO] Prosseguindo...
+    goto RESET_CONCLUIDO
+)
+echo [.] Tentativa %tentativas%/15: Aguardando banco...
+goto LOOP_RESET_CHECK
+
+:RESET_CONCLUIDO
+echo.
+echo [SUCESSO] Banco de dados SIRA resetado e recriado com sucesso!
+if not "%1"=="" exit /b 0
+pause
+goto MENU
+
+:ESPELHAR_BANCO
+cls
+echo ===============================================================================
+echo Espelhando Producao para Teste (sira -> sira_teste)...
+echo ===============================================================================
+echo.
+call node scripts\mirror-prod-to-test.mjs
+echo.
+if not "%1"=="" exit /b 0
+pause
+goto MENU
+
+:PROMOVER_TESTE
+cls
+echo ===============================================================================
+echo Promover Cenarios de Teste para Producao (com Senha Admin)
+echo ===============================================================================
+echo.
+call node scripts\promote-test-to-prod.mjs
+echo.
+if not "%1"=="" exit /b 0
+pause
+goto MENU
+
 :STATUS
 cls
 echo ===============================================================================
@@ -243,10 +354,16 @@ echo.
 echo [1] Conteineres Docker:
 docker compose ps
 echo.
-echo [2] Teste de Conectividade do Banco de Dados:
+echo [2] Conectividade Banco de Producao (sira):
 docker exec sira-postgres pg_isready -U sira_admin -d sira
 echo.
-echo [3] Portas em Escuta:
+echo [3] Conectividade Banco de Testes (sira_teste):
+docker exec sira-postgres pg_isready -U sira_admin -d sira_teste
+echo.
+echo [4] Conectividade Servidor Redis:
+docker exec sira-redis redis-cli ping
+echo.
+echo [5] Portas em Escuta no Host:
 netstat -ano | findstr ":3000 :5173 :5432 :6379 :8080"
 echo.
 if not "%1"=="" exit /b 0
@@ -274,12 +391,20 @@ goto MENU
 :EXECUTAR_TESTES
 cls
 echo ===============================================================================
-echo Executando Bateria de Testes Automatizados (Auth, RBAC e Conflitos)...
+echo Executando Bateria Completa de Testes Automatizados...
 echo ===============================================================================
 echo.
-cd /d "%ROOT_DIR%apps\api"
-node test-academic-flow.mjs
-cd /d "%ROOT_DIR%"
+echo [1/2] Testando Fluxo Academico, RBAC e Conflitos de Horario...
+call node apps\api\test-academic-flow.mjs
+if %ERRORLEVEL% NEQ 0 (
+    echo [FALHA] Testes academicos falharam!
+)
+echo.
+echo [2/2] Testando Sincronizacao Duplo Banco e Promocao com Senha Admin...
+call node apps\api\test-sync-flow.mjs
+if %ERRORLEVEL% NEQ 0 (
+    echo [FALHA] Testes de sincronizacao falharam!
+)
 echo.
 if not "%1"=="" exit /b 0
 pause
@@ -310,93 +435,6 @@ if %ERRORLEVEL% NEQ 0 (
 )
 echo.
 echo [SUCESSO] Todo o sistema foi compilado com 0 erros!
-if not "%1"=="" exit /b 0
-pause
-goto MENU
-
-:SEED_CARGA
-cls
-echo ===============================================================================
-echo Aplicando Seed de Teste de Carga (02_seed_teste_carga.sql)...
-echo Injetando 3 Unidades SENAI (Cuiaba, Caceres, Rondonopolis), Cursos, Ambientes, etc.
-echo ===============================================================================
-echo.
-docker exec -i sira-postgres psql -U sira_admin -d sira < "%ROOT_DIR%database\seeds\02_seed_teste_carga.sql"
-if %ERRORLEVEL% EQU 0 (
-    echo.
-    echo [SUCESSO] Seed de teste de carga aplicado com exito!
-) else (
-    echo.
-    echo [ERRO] Falha ao aplicar o seed de teste de carga.
-)
-if not "%1"=="" exit /b 0
-pause
-goto MENU
-
-:SEED_PRODUCAO
-cls
-echo ===============================================================================
-echo Aplicando Seed de Producao Limpa (01_seed_producao.sql)...
-echo Injetando Roles RBAC, Permissoes Essenciais e Configuracoes Globais...
-echo ===============================================================================
-echo.
-docker exec -i sira-postgres psql -U sira_admin -d sira < "%ROOT_DIR%database\seeds\01_seed_producao.sql"
-if %ERRORLEVEL% EQU 0 (
-    echo.
-    echo [SUCESSO] Seed de producao limpa aplicado com exito!
-) else (
-    echo.
-    echo [ERRO] Falha ao aplicar o seed de producao.
-)
-if not "%1"=="" exit /b 0
-pause
-goto MENU
-
-:RESET_BANCO
-cls
-echo ===============================================================================
-echo ATENCAO: Esta operacao ira limpar todos os volumes do PostgreSQL e recriar
-echo todos os schemas e tabelas a partir dos scripts em database/init/!
-echo ===============================================================================
-set "CONFIRMA="
-set /p "CONFIRMA=Deseja realmente continuar? (S/N): "
-if /i not "%CONFIRMA%"=="S" goto MENU
-echo.
-echo [1/3] Parando conteineres e destruindo volumes antigos...
-docker compose down -v
-echo.
-echo [2/3] Subindo conteineres com inicializacao automatica das tabelas...
-docker compose up -d
-echo.
-echo [3/3] Aguardando banco inicializar...
-timeout /t 6 /nobreak >nul
-docker exec sira-postgres pg_isready -U sira_admin -d sira
-echo.
-echo [SUCESSO] Banco de dados SIRA resetado e recriado com sucesso!
-if not "%1"=="" exit /b 0
-pause
-goto MENU
-
-:ESPELHAR_BANCO
-cls
-echo ===============================================================================
-echo Espelhando Producao para Teste (sira -> sira_teste)...
-echo ===============================================================================
-echo.
-call node scripts\mirror-prod-to-test.mjs
-echo.
-if not "%1"=="" exit /b 0
-pause
-goto MENU
-
-:PROMOVER_TESTE
-cls
-echo ===============================================================================
-echo Promover Cenarios de Teste para Producao (com Senha Admin)
-echo ===============================================================================
-echo.
-call node scripts\promote-test-to-prod.mjs
-echo.
 if not "%1"=="" exit /b 0
 pause
 goto MENU

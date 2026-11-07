@@ -33,19 +33,21 @@ O projeto conta com um painel de controle operacional em arquivo batch na raiz:
 ```
 *(ou simplesmente dê um duplo clique no arquivo `menu.bat` pelo Explorador de Arquivos do Windows)*
 
-Ao abrir o menu, você terá acesso às seguintes opções imediatas:
-- **`[1]` INICIAR SISTEMA COMPLETO**: Sobe o Docker, aguarda a estabilização com healthcheck do PostgreSQL, inicia o NestJS na porta 3000, inicia o Vite na porta 5173 e abre automaticamente o navegador.
-- **`[2]` a `[4]`**: Inicialização individual de serviços (apenas Docker, apenas API ou apenas Frontend).
-- **`[5]` PARAR TUDO**: Encerra os contêineres Docker e fecha os processos Node em background.
-- **`[7]` Verificar Status**: Executa healthcheck no PostgreSQL, Redis e verifica portas ocupadas.
-- **`[8]` Abrir Aplicações**: Abre no navegador o Frontend, a API e o pgAdmin.
-- **`[9]` Executar Testes**: Roda a suíte de testes de autenticação, RBAC e motor de conflitos de horário.
-- **`[10]` Compilar Todo o Sistema**: Valida o build de produção do Backend e do Frontend.
-- **`[11]` Aplicar Seed de Teste de Carga**: Injeta carga massiva com **3 Unidades SENAI** (Cuiabá, Cáceres e Rondonópolis).
-- **`[12]` Aplicar Seed de Produção Limpa**: Injeta apenas as tabelas essenciais de RBAC, permissões e parâmetros globais.
-- **`[13]` Resetar Banco de Dados**: Destrói volumes Docker (`down -v`) e sobe do zero recriando todas as tabelas.
-- **`[14]` Espelhar Produção para Teste**: Clona com segurança os dados de Produção (`sira`) para o banco de Testes (`sira_teste`).
-- **`[15]` Promover Cenários de Teste para Produção**: Valida conflitos de horário e promove a grade para Produção mediante senha do Admin.
+Ao abrir o menu, você terá acesso às seguintes opções organizadas sequencialmente:
+- **`[1]` INICIAR SISTEMA COMPLETO**: Sobe o Docker, aguarda a estabilização com healthcheck do PostgreSQL, inicia o NestJS (:3000), o Vite (:5173) e abre o navegador.
+- **`[2]` a `[4]`**: Inicialização individual (Apenas Docker, Apenas Backend API ou Apenas Frontend Web).
+- **`[5]` PARAR TUDO**: Encerra os contêineres Docker, fecha janelas ativas e libera as portas 3000 e 5173.
+- **`[6]` Parar Apenas Docker**: Executa `docker compose down`.
+- **`[7]` Aplicar Carga de Teste**: Injeta dados completos para **3 Unidades SENAI** (Cuiabá, Cáceres e Rondonópolis).
+- **`[8]` Aplicar Carga Limpa de Produção**: Injeta apenas as tabelas essenciais de RBAC, permissões e parâmetros globais.
+- **`[9]` Resetar Banco de Dados**: Destrói volumes Docker (`down -v`), recria tabelas do zero e aguarda healthcheck.
+- **`[10]` Espelhar Produção para Teste**: Clona com segurança os dados de Produção (`sira`) para o banco de Testes (`sira_teste`).
+- **`[11]` Promover Cenários de Teste para Produção**: Valida conflitos de horário e promove a grade mediante senha do Admin.
+- **`[12]` Verificar Status e Conectividade**: Healthcheck no PostgreSQL (ambos os bancos), Redis e portas em escuta.
+- **`[13]` Abrir Aplicações no Navegador**: Abre Frontend, pgAdmin e API REST em abas do navegador padrão.
+- **`[14]` Executar Testes Automatizados**: Bateria completa de testes de autenticação, RBAC, conflitos e sincronização.
+- **`[15]` Compilar Todo o Sistema**: Validação de build TypeScript do Backend API e Frontend Web.
+- **`[0]` Sair**: Encerra o painel.
 
 ---
 
