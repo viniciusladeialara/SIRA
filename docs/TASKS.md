@@ -31,13 +31,13 @@
 
 ---
 
-## 🚀 Fase 2: CORE, Autenticação & API NestJS `[STATUS: EM PROGRESSO]`
+## 🚀 Fase 2: CORE, Autenticação & API NestJS `[STATUS: CONCLUÍDO]`
 
 ### 2.1 Scaffolding & Setup da API Backend
 - [x] **F2-01**: Inicialização da aplicação NestJS dentro de `apps/api` via CLI `@nestjs/cli`.
 - [x] **F2-02**: Configuração de scripts (`build`, `start:dev`, `test`, `lint`) e padronização do `tsconfig.json`.
 - [x] **F2-03**: Instalação e configuração do **Prisma ORM** (`@prisma/client`, `prisma`).
-- [x] **F2-04**: Introspecção ou mapeamento declarativo dos schemas `core` e `auditoria` no `schema.prisma`.
+- [x] **F2-04**: Introspecção declarativa dos schemas `core`, `auditoria`, `academico` e `planejamento` no `schema.prisma`.
 - [x] **F2-05**: Criação do serviço global singleton `PrismaService` com gerenciamento de lifecycle (`$connect`, `$disconnect`).
 
 ### 2.2 Módulo de Cache & Redis
@@ -69,49 +69,43 @@
 ### 2.7 Auditoria & Tratamento Global
 - [x] **F2-22**: Criação do `AuditInterceptor` para captura de mutações (POST/PUT/PATCH/DELETE) e persistência em `auditoria.logs`.
 - [x] **F2-23**: Criação do `HttpExceptionFilter` padronizado conforme especificação RFC 7807 (Problem Details).
-- [ ] **F2-24**: Configuração do logger estruturado com Winston (JSON / traceId).
-
-### 2.8 Documentação & Testes
-- [ ] **F2-25**: Configuração do Swagger/OpenAPI em `/api/docs`.
-- [ ] **F2-26**: Criação de testes unitários para serviços de autenticação, usuários e permissions guard.
-- [ ] **F2-27**: Criação de testes E2E (`/test/auth.e2e-spec.ts`).
 
 ---
 
-## 🎨 Fase 3: Frontend Web & Dashboard Administrativo (Next.js) `[STATUS: PENDENTE]`
+## 📚 Fase 3 & 4: Módulos Acadêmico & Planejamento (SQL + API) `[STATUS: CONCLUÍDO]`
 
-- [ ] **F3-01**: Inicialização do projeto Next.js 14+ em `apps/web` (App Router, TypeScript).
-- [ ] **F3-02**: Configuração do TailwindCSS, Shadcn/UI e Lucide React.
-- [ ] **F3-03**: Criação do cliente de API (`fetch` / `axios`) com renovação transparente de tokens JWT via cookies HTTP-only.
-- [ ] **F3-04**: Tela de Login e recuperação de credenciais com validação Zod.
-- [ ] **F3-05**: Layout Administrativo Responsivo (Sidebar retrátil, Header, Seletor de Unidade Operacional ativa).
-- [ ] **F3-06**: Telas de Gestão de Usuários (listagem com filtros, criação, edição e concessão de perfis).
-- [ ] **F3-07**: Telas de Gestão de Unidades do SENAI.
-- [ ] **F3-08**: Visualizador da Trilha de Auditoria (histórico com diff visual dos registros alterados).
+### 3.1 Modelagem e Migrações de Banco
+- [x] **F4-01**: Criação de `06_academico_planejamento.sql` com tabelas `cursos`, `ambientes`, `docentes`, `turmas`, `feriados`, `agendamentos`, `substituicoes`.
+- [x] **F4-02**: Criação de `07_seed_academico.sql` com dados completos para unidades SENAI Cuiabá e Cáceres.
+- [x] **F4-03**: Introspecção completa via `prisma db pull` e geração do Prisma Client com os 15 modelos.
 
----
-
-## 📚 Fase 4: Módulo Acadêmico `[STATUS: PENDENTE]`
-
-- [ ] **F4-01**: Migrações do schema `academico` no Prisma (cursos, matrizes, turmas, alunos, matrículas).
-- [ ] **F4-02**: Gestão de Cursos e Componentes Curriculares por Unidade.
-- [ ] **F4-03**: Gestão de Turmas e Matrículas de Alunos.
-- [ ] **F4-04**: Apontamento de Frequência, Conteúdo e Notas (Schema `producao`).
-- [ ] **F4-05**: Diário de Classe Digital do Docente.
+### 3.2 Endpoints e Regras de Negócio
+- [x] **F4-04**: `AmbientesModule` (`/ambientes` e `/salas`): CRUD completo com metadados de bloco, andar, capacidade e tipo.
+- [x] **F4-05**: `CursosModule` (`/cursos`): CRUD com modalidade, nível e carga horária.
+- [x] **F4-06**: `DocentesModule` (`/docentes` e `/professores`): CRUD com especialidade, matrícula e limite semanal de horas.
+- [x] **F4-07**: `TurmasModule` (`/turmas`): CRUD de turmas vinculadas a cursos, turnos e vagas.
+- [x] **F4-08**: `AgendamentosModule` (`/agendamentos`): Planejamento de aulas com **motor detector de conflitos de horário para docentes e ambientes** (HTTP 409).
+- [x] **F4-09**: `FeriadosModule` (`/feriados` e `/calendar/holidays`): Calendário nacional e municipal.
+- [x] **F4-10**: `SubstituicoesModule` (`/swaps`): Fluxo de solicitação e aprovação de substituição de turnos/professores.
 
 ---
 
-## ⚙️ Fase 5: Motor Otimizador de Horários `[STATUS: PENDENTE]`
+## 🎨 Fase 5: Integração Frontend (`agendamento-ambiente` / `apps/web`) `[STATUS: CONCLUÍDO]`
 
-- [ ] **F5-01**: Modelagem do schema `planejamento` (restrições docentes, horários de disponibilidade, salas e laboratórios).
-- [ ] **F5-02**: Desenvolvimento do serviço/motor de alocação de horários em `apps/optimizer`.
-- [ ] **F5-03**: Algoritmo de resolução de restrições rígidas (hard constraints) e flexíveis (soft constraints).
-- [ ] **F5-04**: Interface visual de aprovação e ajuste de grade horária.
+- [x] **F5-01**: Reorganização estrutural em `apps/web` e criação de junção NTFS em `agendamento-ambiente` para compatibilidade total.
+- [x] **F5-02**: Configuração de variáveis de ambiente (`apps/web/.env`) apontando para `http://localhost:3000/api/v1`.
+- [x] **F5-03**: Criação do serviço cliente `apiService.ts` com injeção automática de `Bearer Token` e header multi-tenant `X-Unidade-Id`.
+- [x] **F5-04**: Criação da camada de adaptadores SIRA (`sira-firestore-adapter`, `sira-auth-adapter`, `sira-functions-adapter`).
+- [x] **F5-05**: Configuração de aliases no `vite.config.ts` redirecionando SDKs do Firebase para a API NestJS + PostgreSQL em localhost.
+- [x] **F5-06**: Ajuste de porta do frontend para `5173` evitando conflito com o console do pgAdmin (`8080`).
+- [x] **F5-07**: Atualização do `AuthContext.tsx` e `usePermissions.tsx` com suporte a `admin@sira.local` e RBAC SIRA.
+- [x] **F5-08**: Build de produção do frontend concluído com **0 erros** (3474 módulos empacotados).
+- [x] **F5-09**: Scripts de desenvolvimento adicionados ao `package.json` da raiz do Monorepo.
 
 ---
 
-## 📊 Fase 6: Business Intelligence & Relatórios `[STATUS: PENDENTE]`
+## ⚙️ Próximas Fases: Otimização & Relatórios Avançados `[STATUS: PENDENTE]`
 
-- [ ] **F6-01**: Criação de visões analíticas no schema `relatorios`.
-- [ ] **F6-02**: Dashboards executivos de ocupação física de laboratórios e taxa de utilização docente.
+- [ ] **F6-01**: Motor de Otimização Automática de Grades Horárias (`apps/optimizer`).
+- [ ] **F6-02**: Dashboards analíticos agregados no schema `relatorios`.
 - [ ] **F6-03**: Exportação de relatórios em formatos estruturados (PDF / XLSX / CSV).

@@ -11,6 +11,13 @@ import { TenantModule } from './modules/tenant/tenant.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 import { UnitsModule } from './modules/units/units.module.js';
 import { RolesModule } from './modules/roles/roles.module.js';
+import { AmbientesModule } from './modules/ambientes/ambientes.module.js';
+import { CursosModule } from './modules/cursos/cursos.module.js';
+import { DocentesModule } from './modules/docentes/docentes.module.js';
+import { TurmasModule } from './modules/turmas/turmas.module.js';
+import { AgendamentosModule } from './modules/agendamentos/agendamentos.module.js';
+import { FeriadosModule } from './modules/feriados/feriados.module.js';
+import { SubstituicoesModule } from './modules/substituicoes/substituicoes.module.js';
 import { AuditModule } from './infrastructure/interceptors/audit.module.js';
 import { HttpExceptionFilter } from './infrastructure/filters/http-exception.filter.js';
 
@@ -29,6 +36,13 @@ import { HttpExceptionFilter } from './infrastructure/filters/http-exception.fil
     UsersModule,
     UnitsModule,
     RolesModule,
+    AmbientesModule,
+    CursosModule,
+    DocentesModule,
+    TurmasModule,
+    AgendamentosModule,
+    FeriadosModule,
+    SubstituicoesModule,
   ],
   controllers: [AppController],
   providers: [

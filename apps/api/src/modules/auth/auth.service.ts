@@ -64,7 +64,11 @@ export class AuthService {
    * Autenticação e emissão inicial de Access Token + Refresh Token
    */
   async login(loginDto: LoginDto, ip?: string, userAgent?: string) {
-    const user = await this.validateUser(loginDto.email, loginDto.senha);
+    const rawPassword = loginDto.senha || loginDto.password;
+    if (!rawPassword) {
+      throw new UnauthorizedException('A senha é obrigatória.');
+    }
+    const user = await this.validateUser(loginDto.email, rawPassword);
 
     const payload: JwtPayload = {
       sub: user.id,

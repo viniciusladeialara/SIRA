@@ -21,6 +21,10 @@ build/
 .next/
 out/
 coverage/
+*.tsbuildinfo
+*.db
+.codegraph/
+.agents/
 
 # Logs
 logs/
@@ -58,4 +62,5 @@ junit.xml
 *.pid
 *.seed
 *.pid.lock
+agendamento-ambiente
 *.Credenciais

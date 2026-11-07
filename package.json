@@ -1,0 +1,29 @@
+{
+  "name": "sira-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:api": "npm --prefix apps/api run start:dev",
+    "dev:web": "npm --prefix apps/web run dev",
+    "build:api": "npm --prefix apps/api run build",
+    "build:web": "npm --prefix apps/web run build",
+    "build": "npm run build:api && npm run build:web",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down"
+  },
+  "keywords": [
+    "sira",
+    "senai",
+    "monorepo",
+    "nestjs",
+    "react",
+    "vite",
+    "postgresql",
+    "redis"
+  ],
+  "author": "Vinicius Lara",
+  "license": "UNLICENSED"
+}

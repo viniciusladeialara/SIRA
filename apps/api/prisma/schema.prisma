@@ -86,16 +86,23 @@ model permissoes {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model unidades {
-  id            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  codigo        String?    @unique @db.VarChar(50)
-  nome          String     @db.VarChar(255)
-  sigla         String?    @db.VarChar(50)
-  cidade        String?    @db.VarChar(100)
-  estado        String?    @default("MT") @db.VarChar(2)
-  ativo         Boolean    @default(true)
-  criado_em     DateTime   @default(now()) @db.Timestamptz(6)
-  atualizado_em DateTime   @default(now()) @db.Timestamptz(6)
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  codigo        String?         @unique @db.VarChar(50)
+  nome          String          @db.VarChar(255)
+  sigla         String?         @db.VarChar(50)
+  cidade        String?         @db.VarChar(100)
+  estado        String?         @default("MT") @db.VarChar(2)
+  ativo         Boolean         @default(true)
+  criado_em     DateTime        @default(now()) @db.Timestamptz(6)
+  atualizado_em DateTime        @default(now()) @db.Timestamptz(6)
+  ambientes     ambientes[]
+  cursos        cursos[]
+  docentes      docentes[]
+  turmas        turmas[]
   usuarios      usuarios[]
+  agendamentos  agendamentos[]
+  feriados      feriados[]
+  substituicoes substituicoes[]
 
   @@index([ativo], map: "idx_unidades_ativo")
   @@index([cidade], map: "idx_unidades_cidade")
@@ -123,11 +130,174 @@ model usuarios {
   ativo          Boolean          @default(true)
   criado_em      DateTime         @default(now()) @db.Timestamptz(6)
   atualizado_em  DateTime         @default(now()) @db.Timestamptz(6)
+  docentes       docentes[]
   usuario_perfis usuario_perfis[]
   unidades       unidades?        @relation(fields: [unidade_id], references: [id], onUpdate: NoAction)
+  agendamentos   agendamentos[]
+  substituicoes  substituicoes[]
 
   @@index([ativo], map: "idx_usuarios_ativo")
   @@index([email], map: "idx_usuarios_email")
   @@index([unidade_id], map: "idx_usuarios_unidade")
   @@schema("core")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model ambientes {
+  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  unidade_id    String         @db.Uuid
+  nome          String         @db.VarChar(100)
+  tipo          String         @default("Sala de Aula") @db.VarChar(50)
+  capacidade    Int            @default(30)
+  bloco         String?        @default("Bloco A") @db.VarChar(50)
+  andar         String?        @default("TÃ©rreo") @db.VarChar(50)
+  ativo         Boolean        @default(true)
+  recursos      Json?          @default("{}")
+  criado_em     DateTime       @default(now()) @db.Timestamptz(6)
+  atualizado_em DateTime       @default(now()) @db.Timestamptz(6)
+  unidades      unidades       @relation(fields: [unidade_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  agendamentos  agendamentos[]
+
+  @@index([ativo], map: "idx_ambientes_ativo")
+  @@index([bloco], map: "idx_ambientes_bloco")
+  @@index([unidade_id], map: "idx_ambientes_unidade")
+  @@schema("academico")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model cursos {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  unidade_id    String   @db.Uuid
+  codigo        String   @db.VarChar(50)
+  nome          String   @db.VarChar(255)
+  modalidade    String?  @default("presencial") @db.VarChar(50)
+  nivel         String?  @default("tecnico") @db.VarChar(50)
+  carga_horaria Int      @default(0)
+  ativo         Boolean  @default(true)
+  criado_em     DateTime @default(now()) @db.Timestamptz(6)
+  atualizado_em DateTime @default(now()) @db.Timestamptz(6)
+  unidades      unidades @relation(fields: [unidade_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  turmas        turmas[]
+
+  @@unique([unidade_id, codigo], map: "uq_cursos_unidade_codigo")
+  @@index([ativo], map: "idx_cursos_ativo")
+  @@index([unidade_id], map: "idx_cursos_unidade")
+  @@schema("academico")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model docentes {
+  id                                                          String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  unidade_id                                                  String          @db.Uuid
+  usuario_id                                                  String?         @db.Uuid
+  nome                                                        String          @db.VarChar(255)
+  email                                                       String?         @db.VarChar(255)
+  matricula                                                   String?         @db.VarChar(50)
+  telefone                                                    String?         @db.VarChar(50)
+  especialidade                                               String?         @db.VarChar(255)
+  carga_horaria_max                                           Int             @default(40)
+  ativo                                                       Boolean         @default(true)
+  criado_em                                                   DateTime        @default(now()) @db.Timestamptz(6)
+  atualizado_em                                               DateTime        @default(now()) @db.Timestamptz(6)
+  unidades                                                    unidades        @relation(fields: [unidade_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuarios                                                    usuarios?       @relation(fields: [usuario_id], references: [id], onUpdate: NoAction)
+  agendamentos                                                agendamentos[]
+  substituicoes_substituicoes_docente_original_idTodocentes   substituicoes[] @relation("substituicoes_docente_original_idTodocentes")
+  substituicoes_substituicoes_docente_substituto_idTodocentes substituicoes[] @relation("substituicoes_docente_substituto_idTodocentes")
+
+  @@index([ativo], map: "idx_docentes_ativo")
+  @@index([email], map: "idx_docentes_email")
+  @@index([unidade_id], map: "idx_docentes_unidade")
+  @@schema("academico")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model turmas {
+  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  unidade_id    String         @db.Uuid
+  curso_id      String         @db.Uuid
+  codigo        String         @db.VarChar(50)
+  nome          String         @db.VarChar(255)
+  turno         String         @default("Noturno") @db.VarChar(50)
+  data_inicio   DateTime       @db.Date
+  data_fim      DateTime       @db.Date
+  vagas         Int            @default(30)
+  ativo         Boolean        @default(true)
+  criado_em     DateTime       @default(now()) @db.Timestamptz(6)
+  atualizado_em DateTime       @default(now()) @db.Timestamptz(6)
+  cursos        cursos         @relation(fields: [curso_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  unidades      unidades       @relation(fields: [unidade_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  agendamentos  agendamentos[]
+
+  @@unique([unidade_id, codigo], map: "uq_turmas_unidade_codigo")
+  @@index([ativo], map: "idx_turmas_ativo")
+  @@index([curso_id], map: "idx_turmas_curso")
+  @@index([unidade_id], map: "idx_turmas_unidade")
+  @@schema("academico")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model agendamentos {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  unidade_id    String          @db.Uuid
+  turma_id      String          @db.Uuid
+  ambiente_id   String          @db.Uuid
+  docente_id    String          @db.Uuid
+  data_inicio   DateTime        @db.Timestamptz(6)
+  data_fim      DateTime        @db.Timestamptz(6)
+  status        String          @default("agendado") @db.VarChar(50)
+  observacao    String?
+  criado_por    String?         @db.Uuid
+  criado_em     DateTime        @default(now()) @db.Timestamptz(6)
+  atualizado_em DateTime        @default(now()) @db.Timestamptz(6)
+  ambientes     ambientes       @relation(fields: [ambiente_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuarios      usuarios?       @relation(fields: [criado_por], references: [id], onUpdate: NoAction)
+  docentes      docentes        @relation(fields: [docente_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  turmas        turmas          @relation(fields: [turma_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  unidades      unidades        @relation(fields: [unidade_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  substituicoes substituicoes[]
+
+  @@index([ambiente_id, data_inicio, data_fim], map: "idx_agendamentos_ambiente")
+  @@index([docente_id, data_inicio, data_fim], map: "idx_agendamentos_docente")
+  @@index([turma_id], map: "idx_agendamentos_turma")
+  @@index([unidade_id, data_inicio, data_fim], map: "idx_agendamentos_unidade_intervalo")
+  @@schema("planejamento")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model feriados {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  unidade_id String?   @db.Uuid
+  nome       String    @db.VarChar(255)
+  data       DateTime  @db.Date
+  tipo       String    @default("feriado") @db.VarChar(50)
+  criado_em  DateTime  @default(now()) @db.Timestamptz(6)
+  unidades   unidades? @relation(fields: [unidade_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([data], map: "idx_feriados_data")
+  @@index([unidade_id], map: "idx_feriados_unidade")
+  @@schema("planejamento")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model substituicoes {
+  id                                                     String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  unidade_id                                             String       @db.Uuid
+  agendamento_id                                         String       @db.Uuid
+  docente_original_id                                    String       @db.Uuid
+  docente_substituto_id                                  String       @db.Uuid
+  motivo                                                 String?
+  status                                                 String       @default("pendente") @db.VarChar(50)
+  solicitado_em                                          DateTime     @default(now()) @db.Timestamptz(6)
+  avaliado_em                                            DateTime?    @db.Timestamptz(6)
+  avaliado_por                                           String?      @db.Uuid
+  agendamentos                                           agendamentos @relation(fields: [agendamento_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuarios                                               usuarios?    @relation(fields: [avaliado_por], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  docentes_substituicoes_docente_original_idTodocentes   docentes     @relation("substituicoes_docente_original_idTodocentes", fields: [docente_original_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  docentes_substituicoes_docente_substituto_idTodocentes docentes     @relation("substituicoes_docente_substituto_idTodocentes", fields: [docente_substituto_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  unidades                                               unidades     @relation(fields: [unidade_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([agendamento_id], map: "idx_substituicoes_agendamento")
+  @@index([unidade_id], map: "idx_substituicoes_unidade")
+  @@schema("planejamento")
 }
