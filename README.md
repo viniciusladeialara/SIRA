@@ -180,10 +180,18 @@ SIRA/
 │       ├── 01_seed_producao.sql      # Seed limpo para ambiente de Produção
 │       └── 02_seed_teste_carga.sql   # Seed de Carga Completa com 3 Unidades SENAI
 │
-├── docs/                             # Documentação de Arquitetura e Engenharia
+├── docs/                             # Documentação Técnica Completa (Full Dev & DevOps)
 │   ├── PRD.md                        # Documento de Requisitos de Produto
-│   ├── ARQUITETURA.md                # Decisões arquiteturais e padrões de projeto
-│   └── TASKS.md                      # Matriz operacional e histórico de tarefas
+│   ├── ARQUITETURA.md                # Decisões arquiteturais, C4 model e padrões
+│   ├── TASKS.md                      # Matriz operacional e histórico de tarefas
+│   ├── INFRAESTRUTURA.md             # Guia completo de Docker, PostgreSQL e Redis
+│   ├── BACKEND.md                    # Guia da API NestJS, Prisma, RBAC e Conflitos
+│   ├── FRONTEND.md                   # Guia do React/Vite, SIRA SQL Adapter e UI
+│   └── SINCRONIZACAO_DUPLO_BANCO.md  # Manual do Duplo Banco (sira <-> sira_teste)
+│
+├── scripts/                          # Scripts de automação CLI
+│   ├── mirror-prod-to-test.mjs       # Espelhamento Produção -> Teste
+│   └── promote-test-to-prod.mjs      # Promoção transacional com senha de Admin
 │
 ├── infrastructure/
 │   └── docker/

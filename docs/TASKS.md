@@ -121,6 +121,7 @@
 - [x] **F6-07**: Criação de script interativo de terminal `scripts/promote-test-to-prod.mjs` e integração com `menu.bat` (opções `14` e `15`).
 - [x] **F6-08**: Criação de suíte de testes automatizados `apps/api/test-sync-flow.mjs` validando os 5 cenários com 100% de sucesso.
 - [x] **F6-09**: Elaboração do documento de arquitetura de alta escala e migração em `docs/ARQUITETURA.md`.
+- [x] **F6-10**: Eliminação da pasta redundante `doc/`, unificação definitiva em `docs/` e publicação dos guias técnicos especializados para Desenvolvedor Full Stack: `INFRAESTRUTURA.md`, `BACKEND.md`, `FRONTEND.md` e `SINCRONIZACAO_DUPLO_BANCO.md`.
 
 ---
 
