@@ -51,9 +51,11 @@ export const apiService = {
 
   // --- Autenticação SIRA SQL ---
   async login(email: string, password: string) {
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanPassword = (password || '').trim();
     const res = await this.request('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password, senha: password }),
+      body: JSON.stringify({ email: cleanEmail, password: cleanPassword, senha: cleanPassword }),
     });
 
     const token = res.access_token || res.token;

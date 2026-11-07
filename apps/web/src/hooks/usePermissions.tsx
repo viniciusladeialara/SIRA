@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/lib/AuthContext';
-import { UserRole, UserWithRole, hasPermission, getModulePermissions } from '@/lib/UserRoles';
+import { UserRole, UserWithRole, UserStatus, hasPermission, getModulePermissions } from '@/lib/UserRoles';
 import { auth, db } from "@/lib/db";
 import { signOut } from "@/lib/sira-auth-adapter";
 import { doc, getDoc, updateDoc, onSnapshot } from "@/lib/sira-sql-adapter"; 

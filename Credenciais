@@ -18,3 +18,7 @@ Sira@2026 (você pode marcar a opção "Save password" para não pedir mais).
 Ao abrir a árvore de navegação em Databases > sira > Schemas, você já verá os 6 schemas 
 (core, academico, auditoria, etc.) e as tabelas criadas com a carga inicial de dados.
 
+Credenciais Padrão para Teste
+E-mail: admin@sira.local
+Senha: Admin@2026
+Unidade Padrão: SENAI Cuiabá (a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11)
