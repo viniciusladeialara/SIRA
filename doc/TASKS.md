@@ -41,11 +41,11 @@
 - [x] **F2-05**: Criação do serviço global singleton `PrismaService` com gerenciamento de lifecycle (`$connect`, `$disconnect`).
 
 ### 2.2 Módulo de Cache & Redis
-- [>] **F2-06**: Integração com Redis via `ioredis` ou `@nestjs-modules/ioredis`.
-- [ ] **F2-07**: Criação do serviço de cache com métodos genéricos (`get`, `set`, `del`, `invalidatePattern`).
+- [x] **F2-06**: Integração com Redis via `ioredis` e `@nestjs/config` com lifecycle de desconexão limpa.
+- [x] **F2-07**: Criação do serviço global `RedisCacheService` com métodos genéricos (`get`, `set`, `del`, `delPattern`, `addToDenylist`, `isTokenDenylisted`, `checkRateLimit`).
 
 ### 2.3 Autenticação & Segurança (JWT + Refresh Token)
-- [ ] **F2-08**: Instalação de dependências de segurança (`@nestjs/jwt`, `@nestjs/passport`, `passport`, `passport-jwt`, `bcrypt`).
+- [>] **F2-08**: Instalação de dependências de segurança (`@nestjs/jwt`, `@nestjs/passport`, `passport`, `passport-jwt`, `bcrypt` e tipagens).
 - [ ] **F2-09**: Criação do `AuthModule`, `AuthService` e `AuthController`.
 - [ ] **F2-10**: Implementação da rota `POST /auth/login` (validação de credenciais, geração de access token e refresh token).
 - [ ] **F2-11**: Implementação da rota `POST /auth/refresh` (renovação do access token e rotação do refresh token).
