@@ -125,8 +125,22 @@
 
 ---
 
+## 👥 Fase 7: Governança em 4 Níveis, RBAC e Módulos Dinâmicos `[STATUS: CONCLUÍDO]`
+
+- [x] **F7-01**: Implementação da hierarquia em 4 níveis:
+  - **Nível 1 (SysAdmin/TI Central)**: Parâmetros globais, criação de unidades e controle direto de sincronização entre bancos (`sira` <-> `sira_teste`).
+  - **Nível 2 (Admin da Unidade)**: Controle da unidade, gestão de usuários, atribuição de módulos e acesso irrestrito.
+  - **Nível 3 (Usuário do Sistema / Coordenação / Secretaria)**: Cadastro e edição de professores, alimentação de turmas e ambientes, agendamentos e cancelamentos, geração de relatórios operacionais. **Impossibilitado de excluir usuários, docentes, turmas ou ambientes**.
+  - **Nível 4 (Professor)**: Acesso exclusivo à visualização da grade semanal ("Minha Grade" / `teacher-week`) e botão de troca de horários/salas (`swaps`), sem acesso aos módulos administrativos.
+- [x] **F7-02**: Implementação de liberação granular e dinâmica de módulos por usuário (`allowedModules` / `blockedModules` com salvamento no banco e auditoria de alterações).
+- [x] **F7-03**: Amarração estrita de permissões em `UserRoles.ts`, `usePermissions.tsx`, `AuthContext.tsx` e `ModuleRegistry.ts`.
+- [x] **F7-04**: Ocultação e proteção de botões de exclusão na UI para o perfil `USER` (`UserManagementModule`, `ProfessorModule`, `ClassModule`, `EnvironmentModule`, `CourseModule`).
+- [x] **F7-05**: Configuração da sidebar para que o perfil `PROFESSOR` veja exclusivamente os módulos permitidos e acesse diretamente sua grade semanal.
+
+---
+
 ## ⚙️ Próximas Fases: Otimização & Relatórios Avançados `[STATUS: PENDENTE]`
 
-- [ ] **F7-01**: Motor de Otimização Automática de Grades Horárias (`apps/optimizer`).
-- [ ] **F7-02**: Dashboards analíticos agregados no schema `relatorios`.
-- [ ] **F7-03**: Exportação de relatórios em formatos estruturados (PDF / XLSX / CSV).
+- [ ] **F8-01**: Motor de Otimização Automática de Grades Horárias (`apps/optimizer`).
+- [ ] **F8-02**: Dashboards analíticos agregados no schema `relatorios`.
+- [ ] **F8-03**: Exportação de relatórios em formatos estruturados (PDF / XLSX / CSV).
