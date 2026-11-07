@@ -44,10 +44,10 @@ echo.
 echo   --- BANCO DE DADOS E CARGAS SQL ---
 echo   [7]  Aplicar Carga de Teste (3 Unidades: Cuiaba, Caceres, Rondonopolis)
 echo   [8]  Aplicar Carga Limpa de Producao (Apenas RBAC e Roles Essenciais)
-echo   [9]  Resetar Banco de Dados (docker compose down -v && docker compose up -d)
+echo   [9]  Resetar Banco de Dados (Recriar Schemas e Tabelas do Zero)
 echo.
-echo   --- HOMOLOGACAO E SINCRONIZACAO (PROD ^<--^> TESTE) ---
-echo   [10] Espelhar Producao para Teste (sira -> sira_teste)
+echo   --- HOMOLOGACAO E SINCRONIZACAO (PRODUCAO / TESTE) ---
+echo   [10] Espelhar Producao para Teste (sira para sira_teste)
 echo   [11] Promover Cenarios de Teste para Producao (com Senha Admin)
 echo.
 echo   --- DIAGNOSTICO E FERRAMENTAS ---
@@ -324,7 +324,7 @@ goto MENU
 :ESPELHAR_BANCO
 cls
 echo ===============================================================================
-echo Espelhando Producao para Teste (sira -> sira_teste)...
+echo Espelhando Producao para Teste (sira para sira_teste)...
 echo ===============================================================================
 echo.
 call node scripts\mirror-prod-to-test.mjs
