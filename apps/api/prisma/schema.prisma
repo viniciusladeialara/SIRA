@@ -1,0 +1,133 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["academico", "auditoria", "core", "planejamento", "producao", "relatorios"]
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model logs {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usuario_id       String?  @db.Uuid
+  usuario_email    String?  @db.VarChar(255)
+  unidade_id       String?  @db.Uuid
+  schema_name      String   @default("public") @db.VarChar(100)
+  tabela           String   @default("unknown") @db.VarChar(100)
+  registro_id      String?  @db.VarChar(255)
+  acao             String   @db.VarChar(50)
+  data_hora        DateTime @default(now()) @db.Timestamptz(6)
+  ip               String?  @db.VarChar(45)
+  user_agent       String?
+  dados_anteriores Json?
+  dados_novos      Json?
+
+  @@index([acao], map: "idx_auditoria_acao")
+  @@index([data_hora(sort: Desc)], map: "idx_auditoria_data_hora")
+  @@index([tabela], map: "idx_auditoria_tabela")
+  @@index([unidade_id], map: "idx_auditoria_unidade_id")
+  @@index([usuario_id], map: "idx_auditoria_usuario_id")
+  @@schema("auditoria")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model configuracoes_globais {
+  chave         String   @id @db.VarChar(100)
+  valor         Json
+  descricao     String?
+  atualizado_em DateTime @default(now()) @db.Timestamptz(6)
+
+  @@schema("core")
+}
+
+model perfil_permissoes {
+  perfil_id    String     @db.Uuid
+  permissao_id String     @db.Uuid
+  atribuido_em DateTime   @default(now()) @db.Timestamptz(6)
+  perfis       perfis     @relation(fields: [perfil_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  permissoes   permissoes @relation(fields: [permissao_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([perfil_id, permissao_id])
+  @@schema("core")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model perfis {
+  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug              String              @unique @db.VarChar(50)
+  nome              String              @db.VarChar(100)
+  descricao         String?
+  ativo             Boolean             @default(true)
+  criado_em         DateTime            @default(now()) @db.Timestamptz(6)
+  perfil_permissoes perfil_permissoes[]
+  usuario_perfis    usuario_perfis[]
+
+  @@index([slug], map: "idx_perfis_slug")
+  @@schema("core")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model permissoes {
+  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  modulo            String              @db.VarChar(50)
+  acao              String              @db.VarChar(50)
+  chave             String              @unique @db.VarChar(100)
+  descricao         String?
+  criado_em         DateTime            @default(now()) @db.Timestamptz(6)
+  perfil_permissoes perfil_permissoes[]
+
+  @@index([chave], map: "idx_permissoes_chave")
+  @@index([modulo], map: "idx_permissoes_modulo")
+  @@schema("core")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model unidades {
+  id            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  codigo        String?    @unique @db.VarChar(50)
+  nome          String     @db.VarChar(255)
+  sigla         String?    @db.VarChar(50)
+  cidade        String?    @db.VarChar(100)
+  estado        String?    @default("MT") @db.VarChar(2)
+  ativo         Boolean    @default(true)
+  criado_em     DateTime   @default(now()) @db.Timestamptz(6)
+  atualizado_em DateTime   @default(now()) @db.Timestamptz(6)
+  usuarios      usuarios[]
+
+  @@index([ativo], map: "idx_unidades_ativo")
+  @@index([cidade], map: "idx_unidades_cidade")
+  @@schema("core")
+}
+
+model usuario_perfis {
+  usuario_id   String   @db.Uuid
+  perfil_id    String   @db.Uuid
+  atribuido_em DateTime @default(now()) @db.Timestamptz(6)
+  perfis       perfis   @relation(fields: [perfil_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuarios     usuarios @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([usuario_id, perfil_id])
+  @@schema("core")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model usuarios {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  unidade_id     String?          @db.Uuid
+  nome           String           @db.VarChar(255)
+  email          String           @unique @db.VarChar(255)
+  senha_hash     String           @db.VarChar(255)
+  ativo          Boolean          @default(true)
+  criado_em      DateTime         @default(now()) @db.Timestamptz(6)
+  atualizado_em  DateTime         @default(now()) @db.Timestamptz(6)
+  usuario_perfis usuario_perfis[]
+  unidades       unidades?        @relation(fields: [unidade_id], references: [id], onUpdate: NoAction)
+
+  @@index([ativo], map: "idx_usuarios_ativo")
+  @@index([email], map: "idx_usuarios_email")
+  @@index([unidade_id], map: "idx_usuarios_unidade")
+  @@schema("core")
+}

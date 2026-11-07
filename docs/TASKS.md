@@ -36,12 +36,12 @@
 ### 2.1 Scaffolding & Setup da API Backend
 - [x] **F2-01**: Inicialização da aplicação NestJS dentro de `apps/api` via CLI `@nestjs/cli`.
 - [x] **F2-02**: Configuração de scripts (`build`, `start:dev`, `test`, `lint`) e padronização do `tsconfig.json`.
-- [>] **F2-03**: Instalação e configuração do **Prisma ORM** (`@prisma/client`, `prisma`).
-- [ ] **F2-04**: Introspecção ou mapeamento declarativo dos schemas `core` e `auditoria` no `schema.prisma`.
-- [ ] **F2-05**: Criação do serviço global singleton `PrismaService` com gerenciamento de lifecycle (`$connect`, `$disconnect`).
+- [x] **F2-03**: Instalação e configuração do **Prisma ORM** (`@prisma/client`, `prisma`).
+- [x] **F2-04**: Introspecção ou mapeamento declarativo dos schemas `core` e `auditoria` no `schema.prisma`.
+- [x] **F2-05**: Criação do serviço global singleton `PrismaService` com gerenciamento de lifecycle (`$connect`, `$disconnect`).
 
 ### 2.2 Módulo de Cache & Redis
-- [ ] **F2-06**: Integração com Redis via `ioredis` ou `@nestjs-modules/ioredis`.
+- [>] **F2-06**: Integração com Redis via `ioredis` ou `@nestjs-modules/ioredis`.
 - [ ] **F2-07**: Criação do serviço de cache com métodos genéricos (`get`, `set`, `del`, `invalidatePattern`).
 
 ### 2.3 Autenticação & Segurança (JWT + Refresh Token)
