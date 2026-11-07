@@ -45,16 +45,16 @@
 - [x] **F2-07**: Criação do serviço global `RedisCacheService` com métodos genéricos (`get`, `set`, `del`, `delPattern`, `addToDenylist`, `isTokenDenylisted`, `checkRateLimit`).
 
 ### 2.3 Autenticação & Segurança (JWT + Refresh Token)
-- [>] **F2-08**: Instalação de dependências de segurança (`@nestjs/jwt`, `@nestjs/passport`, `passport`, `passport-jwt`, `bcrypt` e tipagens).
-- [ ] **F2-09**: Criação do `AuthModule`, `AuthService` e `AuthController`.
-- [ ] **F2-10**: Implementação da rota `POST /auth/login` (validação de credenciais, geração de access token e refresh token).
-- [ ] **F2-11**: Implementação da rota `POST /auth/refresh` (renovação do access token e rotação do refresh token).
-- [ ] **F2-12**: Implementação da rota `POST /auth/logout` (invalidação de tokens na denylist do Redis).
-- [ ] **F2-13**: Implementação do `JwtStrategy` e `JwtAuthGuard` global com suporte a decorador `@Public()`.
+- [x] **F2-08**: Instalação de dependências de segurança (`@nestjs/jwt`, `@nestjs/passport`, `passport`, `passport-jwt`, `bcrypt`, `class-validator` e tipagens).
+- [x] **F2-09**: Criação do `AuthModule`, `AuthService` e `AuthController` em conformidade com Clean Architecture.
+- [x] **F2-10**: Implementação da rota `POST /auth/login` (validação bcrypt, emissão de JWT, refresh token no Redis e log em `auditoria.logs`).
+- [x] **F2-11**: Implementação da rota `POST /auth/refresh` (renovação segura com rotação atômica de refresh tokens no Redis).
+- [x] **F2-12**: Implementação da rota `POST /auth/logout` (invalidação do access token via denylist no Redis e remoção de sessão).
+- [x] **F2-13**: Implementação do `JwtStrategy` e `JwtAuthGuard` global com suporte a decorador `@Public()` e `@CurrentUser()`.
 
 ### 2.4 Controle de Acesso Baseado em Perfis (RBAC Granular)
-- [ ] **F2-14**: Criação dos decoradores `@Roles()` e `@RequirePermissions('modulo.acao')`.
-- [ ] **F2-15**: Implementação do `PermissionsGuard` (avaliação de permissões com caching em Redis).
+- [>] **F2-14**: Criação dos decoradores `@Roles('administrador', ...)` e `@RequirePermissions('modulo.acao')`.
+- [ ] **F2-15**: Implementação do `PermissionsGuard` (avaliação de permissões granulares no banco e com caching em Redis).
 
 ### 2.5 Isolamento Multiunidade (Multi-tenancy Context)
 - [ ] **F2-16**: Criação do serviço de contexto assíncrono `TenantContext` baseado em `AsyncLocalStorage`.
