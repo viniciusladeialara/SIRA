@@ -57,12 +57,12 @@
 - [x] **F2-15**: Implementação do `RolesGuard`, `PermissionsGuard` e `RbacService` (avaliação no PostgreSQL com caching em Redis e superuser bypass).
 
 ### 2.5 Isolamento Multiunidade (Multi-tenancy Context)
-- [>] **F2-16**: Criação do serviço de contexto assíncrono `TenantContext` baseado em `AsyncLocalStorage`.
-- [ ] **F2-17**: Criação do `TenantInterceptor` para extração do header `X-Unidade-Id` e validação de vínculo do usuário.
-- [ ] **F2-18**: Injeção automática de escopo de unidade nas operações de repositório.
+- [x] **F2-16**: Criação do serviço de contexto assíncrono `TenantContext` baseado em `AsyncLocalStorage`.
+- [x] **F2-17**: Criação do `TenantInterceptor` para extração do header `X-Unidade-Id`, validação estrita de tenant e superuser bypass.
+- [x] **F2-18**: Injeção e escopo de unidade nas operações via `TenantScopeHelper` e decorador `@CurrentTenant()`.
 
 ### 2.6 Módulos de Domínio do Core
-- [ ] **F2-19**: Módulo de Usuários (`UsersModule`): CRUD completo, validação de DTOs com `class-validator`, hashing de senhas.
+- [>] **F2-19**: Módulo de Usuários (`UsersModule`): CRUD completo, validação de DTOs com `class-validator`, hashing de senhas.
 - [ ] **F2-20**: Módulo de Unidades (`UnitsModule`): Listagem, ativação/inativação e busca por código/cidade.
 - [ ] **F2-21**: Módulo de Perfis e Permissões (`RolesModule`): Consulta de catálogo e atribuição de perfis a usuários.
 

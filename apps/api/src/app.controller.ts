@@ -7,10 +7,15 @@ import { Roles } from './modules/rbac/decorators/roles.decorator.js';
 import { RolesGuard } from './modules/rbac/guards/roles.guard.js';
 import { RequirePermissions } from './modules/rbac/decorators/require-permissions.decorator.js';
 import { PermissionsGuard } from './modules/rbac/guards/permissions.guard.js';
+import { CurrentTenant } from './modules/tenant/decorators/current-tenant.decorator.js';
+import { TenantContext } from './modules/tenant/tenant.context.js';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(
+    private readonly appService: AppService,
+    private readonly tenantContext: TenantContext,
+  ) {}
 
   @Public()
   @Get()
@@ -32,10 +37,12 @@ export class AppController {
     return { message: 'Acesso permitido: Permissão [usuarios.ler] validada.', user: user.email };
   }
 
-  @UseGuards(PermissionsGuard)
-  @RequirePermissions('sistema.configuracao_inexistente')
-  @Get('rbac/impossible-perm')
-  testImpossiblePermission() {
-    return { message: 'Não deve ser retornado a usuários normais.' };
+  @Get('tenant/current')
+  testTenant(@CurrentTenant() decoratorTenantId: string | null) {
+    return {
+      activeTenantId: this.tenantContext.getTenantId(),
+      decoratorTenantId,
+      isSuperAdmin: this.tenantContext.isSuperAdmin(),
+    };
   }
 }

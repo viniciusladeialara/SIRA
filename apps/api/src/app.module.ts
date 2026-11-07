@@ -6,6 +6,7 @@ import { PrismaModule } from './infrastructure/prisma/prisma.module.js';
 import { RedisModule } from './infrastructure/redis/redis.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { RbacModule } from './modules/rbac/rbac.module.js';
+import { TenantModule } from './modules/tenant/tenant.module.js';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { RbacModule } from './modules/rbac/rbac.module.js';
     RedisModule,
     AuthModule,
     RbacModule,
+    TenantModule,
   ],
   controllers: [AppController],
   providers: [AppService],
