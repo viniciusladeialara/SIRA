@@ -2,6 +2,9 @@
 
 Plataforma empresarial de alta performance e disponibilidade para gestão operacional, acadêmica, planejamento de matrizes horárias e controle de recursos físicos das unidades operacionais do **SENAI**.
 
+> 📖 **Guia Operacional e Credenciais Master:**  
+> Consulte o [**Manual de Uso e Controle Master (MANUAL_DE_USO_E_CONTROLE_MASTER.md)**](file:///c:/Users/VINICIUS/Documents/GitHub/SIRA/MANUAL_DE_USO_E_CONTROLE_MASTER.md) para a lista de usuários pré-cadastrados, senhas, portas de serviços e procedimentos de homologação.
+
 ---
 
 ## 📌 Sumário Executivo
