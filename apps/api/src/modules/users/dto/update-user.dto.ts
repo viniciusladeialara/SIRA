@@ -18,6 +18,10 @@ export class UpdateUserDto {
   @IsOptional()
   unidadeId?: string;
 
+  @IsUUID('4')
+  @IsOptional()
+  selectedUnitId?: string;
+
   @IsArray()
   @IsString({ each: true })
   @IsOptional()

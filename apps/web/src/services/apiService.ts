@@ -107,9 +107,13 @@ export const apiService = {
   },
 
   async updateUser(id: string, data: any) {
+    const payload: any = { ...data };
+    if (payload.selectedUnitId && !payload.unidadeId) {
+      payload.unidadeId = payload.selectedUnitId;
+    }
     return this.request(`/users/${id}`, {
       method: 'PATCH',
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
   },
 
@@ -122,15 +126,23 @@ export const apiService = {
   async getUnits() {
     try {
       const data = await this.request('/units');
-      if (Array.isArray(data) && data.length > 0) return data;
+      if (Array.isArray(data) && data.length > 0) {
+        return data.map((u: any) => ({
+          ...u,
+          name: u.nome || u.name,
+          nome: u.nome || u.name,
+          code: u.sigla || u.codigo || u.code,
+          sigla: u.sigla || u.codigo || u.code,
+        }));
+      }
     } catch {
       // Fallback seguro com unidades padrão
     }
     return [
-      { id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11", code: "CBA", name: "SENAI Cuiabá", cidade: "Cuiabá" },
-      { id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12", code: "CAC", name: "SENAI Cáceres", cidade: "Cáceres" },
-      { id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13", code: "ROO", name: "SENAI Rondonópolis", cidade: "Rondonópolis" },
-      { id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a14", code: "SNP", name: "SENAI Sinop", cidade: "Sinop" }
+      { id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11", code: "CBA", sigla: "CBA", name: "SENAI Cuiabá", nome: "SENAI Cuiabá", cidade: "Cuiabá" },
+      { id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12", code: "CAC", sigla: "CAC", name: "SENAI Cáceres", nome: "SENAI Cáceres", cidade: "Cáceres" },
+      { id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13", code: "ROO", sigla: "ROO", name: "SENAI Rondonópolis", nome: "SENAI Rondonópolis", cidade: "Rondonópolis" },
+      { id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a14", code: "SNP", sigla: "SNP", name: "SENAI Sinop", nome: "SENAI Sinop", cidade: "Sinop" }
     ];
   },
 

@@ -136,7 +136,8 @@ export class UsersService {
     if (dto.nome !== undefined) dataToUpdate.nome = dto.nome;
     if (dto.email !== undefined) dataToUpdate.email = dto.email;
     if (dto.ativo !== undefined) dataToUpdate.ativo = dto.ativo;
-    if (dto.unidadeId !== undefined) dataToUpdate.unidade_id = dto.unidadeId;
+    const targetUnitId = dto.unidadeId || dto.selectedUnitId;
+    if (targetUnitId !== undefined) dataToUpdate.unidade_id = targetUnitId;
     if (dto.senha) {
       dataToUpdate.senha_hash = await bcrypt.hash(dto.senha, 10);
     }

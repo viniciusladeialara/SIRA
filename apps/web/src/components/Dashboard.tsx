@@ -78,54 +78,7 @@ const Dashboard: React.FC = () => {
     fetchUnits();
   }, []);
 
-  // Auto-seed para certificar que a nova unidade Barra do Bugres existe
-  useEffect(() => {
-    const ensureBarraDoBugres = async () => {
-      if (isSuperAdmin && currentUser) {
-        try {
-          const unitRef = doc(db, "units", "barra-do-bugres");
-          const unitSnap = await getDoc(unitRef);
-          
-          let dbUpdated = false;
-          
-          if (!unitSnap.exists()) {
-            await setDoc(unitRef, {
-              name: "SENAI Barra do Bugres",
-              code: "BB",
-              createdAt: serverTimestamp()
-            });
-            console.log("Unidade Barra do Bugres criada no Firestore.");
-            dbUpdated = true;
-          }
-
-          const userRef = doc(db, "users", currentUser.uid);
-          const userSnap = await getDoc(userRef);
-          if (userSnap.exists()) {
-            const currentUnitIds = userSnap.data().unitIds || [];
-            if (!currentUnitIds.includes("barra-do-bugres")) {
-              await updateDoc(userRef, {
-                unitIds: [...currentUnitIds, "barra-do-bugres"]
-              });
-              console.log("Unidade Barra do Bugres adicionada ao super admin.");
-              dbUpdated = true;
-            }
-          }
-
-          if (dbUpdated) {
-            const snap = await getDocs(collection(db, "units"));
-            const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            setUnits(list);
-          }
-        } catch (error) {
-          console.error("Erro ao certificar unidade Barra do Bugres:", error);
-        }
-      }
-    };
-    ensureBarraDoBugres();
-  }, [currentUser]);
-
   const userUnitIds = userData?.unitIds || [];
-  const selectedUnitId = userData?.selectedUnitId || "caceres";
   const isSuperAdmin = isUserSuperAdmin();
 
   // Determinar quais unidades mostrar no selector
@@ -139,17 +92,27 @@ const Dashboard: React.FC = () => {
       const filtered = units.filter(u => userUnitIds.includes(u.id));
       if (filtered.length > 0) return filtered;
     }
-    return units.filter(u => u.id === selectedUnitId);
-  }, [units, isSuperAdmin, userUnitIds, selectedUnitId]);
+    const currentUnit = userData?.unidadeId || userData?.selectedUnitId;
+    if (currentUnit) {
+      const match = units.filter(u => u.id === currentUnit);
+      if (match.length > 0) return match;
+    }
+    return units;
+  }, [units, isSuperAdmin, userUnitIds, userData]);
+
+  const selectedUnitId = userData?.selectedUnitId || userData?.unidadeId || localStorage.getItem('selected_unit_id') || (availableUnits[0]?.id) || "";
 
   const handleUnitChange = async (unitId: string) => {
-    if (!currentUser || unitId === selectedUnitId) return;
-    const unitName = availableUnits.find(u => u.id === unitId)?.name || unitId;
+    if (!currentUser || !unitId || unitId === selectedUnitId) return;
+    const unitObj = availableUnits.find(u => u.id === unitId) || units.find(u => u.id === unitId);
+    const unitName = unitObj?.nome || unitObj?.name || unitId;
     setChangingUnitName(unitName);
     setIsUnitChanging(true);
+    localStorage.setItem('selected_unit_id', unitId);
     try {
       await updateDoc(doc(db, "users", currentUser.uid), {
-        selectedUnitId: unitId
+        selectedUnitId: unitId,
+        unidadeId: unitId,
       });
     } catch (err) {
       console.error("Erro ao alternar unidade:", err);
@@ -252,13 +215,13 @@ const Dashboard: React.FC = () => {
             >
               {availableUnits.map((u) => (
                 <option key={u.id} value={u.id} className="bg-gray-900 text-white">
-                  {u.name}
+                  {u.nome || u.name || u.sigla || "Unidade SENAI"}
                 </option>
               ))}
             </select>
           ) : (
             <div className="font-bold text-base text-white py-1">
-              {units.find(u => u.id === selectedUnitId)?.name || "SENAI Cáceres"}
+              {units.find(u => u.id === selectedUnitId)?.nome || units.find(u => u.id === selectedUnitId)?.name || availableUnits[0]?.nome || availableUnits[0]?.name || "SENAI Cuiabá"}
             </div>
           )}
         </div>

@@ -233,6 +233,20 @@ function mapSqlToDocData(colName: string, item: any): any {
         type: item.tipo || item.type,
       };
 
+    case 'units':
+    case 'unidades':
+      return {
+        id: item.id,
+        name: item.nome || item.name || 'Unidade SENAI',
+        nome: item.nome || item.name || 'Unidade SENAI',
+        code: item.sigla || item.codigo || item.code || 'SENAI',
+        sigla: item.sigla || item.codigo || item.code || 'SENAI',
+        cidade: item.cidade || '',
+        estado: item.estado || 'MT',
+        ativo: item.ativo !== undefined ? item.ativo : true,
+        ...item,
+      };
+
     default:
       return item;
   }
