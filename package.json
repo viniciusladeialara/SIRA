@@ -12,7 +12,9 @@
     "build:web": "npm --prefix apps/web run build",
     "build": "npm run build:api && npm run build:web",
     "docker:up": "docker compose up -d",
-    "docker:down": "docker compose down"
+    "docker:down": "docker compose down",
+    "seed:prod": "docker exec -i sira-postgres psql -U sira_admin -d sira < database/seeds/01_seed_producao.sql",
+    "seed:load": "docker exec -i sira-postgres psql -U sira_admin -d sira < database/seeds/02_seed_teste_carga.sql"
   },
   "keywords": [
     "sira",

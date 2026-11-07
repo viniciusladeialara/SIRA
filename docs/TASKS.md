@@ -103,6 +103,10 @@
 - [x] **F5-09**: Scripts de desenvolvimento adicionados ao `package.json` da raiz do Monorepo.
 - [x] **F5-10**: Remoção completa de arquivos, regras, mocks e funções legadas do Firebase; migração de 53 componentes para a camada nativa SIRA SQL (`@/lib/db`, `@/lib/sira-sql-adapter`).
 - [x] **F5-11**: Criação do script interativo de operações `menu.bat` na raiz com healthcheck, delays de inicialização segura e comandos de orquestração completa.
+- [x] **F5-12**: Desvinculação segura da pasta/junção temporária `agendamento-ambiente` (mantendo integridade total de `apps/web`).
+- [x] **F5-13**: Criação do script de seed de produção limpa `database/seeds/01_seed_producao.sql` (RBAC, roles e permissões essenciais).
+- [x] **F5-14**: Criação do script de seed de teste de carga `database/seeds/02_seed_teste_carga.sql` com suporte a 3 unidades operacionais SENAI (Cuiabá, Cáceres, Rondonópolis) com 11 cursos, 18 ambientes, 15 docentes, 11 turmas, feriados e agendamentos.
+- [x] **F5-15**: Integração das rotinas de injeção de seeds e reset do banco ao `menu.bat` (opções 11, 12, 13) e atualização completa do `README.md`.
 
 ---
 

@@ -15,6 +15,9 @@ if "%1"=="7" goto STATUS
 if "%1"=="8" goto ABRIR_NAVEGADOR
 if "%1"=="9" goto EXECUTAR_TESTES
 if "%1"=="10" goto COMPILAR_TUDO
+if "%1"=="11" goto SEED_CARGA
+if "%1"=="12" goto SEED_PRODUCAO
+if "%1"=="13" goto RESET_BANCO
 if "%1"=="0" goto SAIR
 
 :MENU
@@ -36,6 +39,11 @@ echo   --- PARADA E ENCERRAMENTO ---
 echo   [5]  PARAR TUDO (Encerrar Docker e fechar janelas do Node/SIRA)
 echo   [6]  Parar Apenas Conteineres Docker (docker compose down)
 echo.
+echo   --- CARGA SQL E GESTAO DO BANCO DE DADOS ---
+echo   [11] Aplicar Seed de Teste de Carga (3 Unidades: Cuiaba, Caceres, Rondonopolis)
+echo   [12] Aplicar Seed de Producao Limpa (Apenas RBAC e Roles Essenciais)
+echo   [13] Resetar Banco de Dados (docker compose down -v && docker compose up -d)
+echo.
 echo   --- DIAGNOSTICO E FERRAMENTAS ---
 echo   [7]  Verificar Status e Healthcheck dos Servicos
 echo   [8]  Abrir Aplicacoes no Navegador (Frontend, pgAdmin, API)
@@ -46,7 +54,7 @@ echo   [0]  Sair
 echo.
 echo ===============================================================================
 set "OPCAO="
-set /p "OPCAO=>> Digite a opcao desejada [0-10]: "
+set /p "OPCAO=>> Digite a opcao desejada [0-13]: "
 
 if "%OPCAO%"=="1" goto INICIAR_TUDO
 if "%OPCAO%"=="2" goto INICIAR_DOCKER
@@ -58,6 +66,9 @@ if "%OPCAO%"=="7" goto STATUS
 if "%OPCAO%"=="8" goto ABRIR_NAVEGADOR
 if "%OPCAO%"=="9" goto EXECUTAR_TESTES
 if "%OPCAO%"=="10" goto COMPILAR_TUDO
+if "%OPCAO%"=="11" goto SEED_CARGA
+if "%OPCAO%"=="12" goto SEED_PRODUCAO
+if "%OPCAO%"=="13" goto RESET_BANCO
 if "%OPCAO%"=="0" goto SAIR
 
 echo.
@@ -291,6 +302,69 @@ if %ERRORLEVEL% NEQ 0 (
 )
 echo.
 echo [SUCESSO] Todo o sistema foi compilado com 0 erros!
+if not "%1"=="" exit /b 0
+pause
+goto MENU
+
+:SEED_CARGA
+cls
+echo ===============================================================================
+echo Aplicando Seed de Teste de Carga (02_seed_teste_carga.sql)...
+echo Injetando 3 Unidades SENAI (Cuiaba, Caceres, Rondonopolis), Cursos, Ambientes, etc.
+echo ===============================================================================
+echo.
+docker exec -i sira-postgres psql -U sira_admin -d sira < "%ROOT_DIR%database\seeds\02_seed_teste_carga.sql"
+if %ERRORLEVEL% EQU 0 (
+    echo.
+    echo [SUCESSO] Seed de teste de carga aplicado com exito!
+) else (
+    echo.
+    echo [ERRO] Falha ao aplicar o seed de teste de carga.
+)
+if not "%1"=="" exit /b 0
+pause
+goto MENU
+
+:SEED_PRODUCAO
+cls
+echo ===============================================================================
+echo Aplicando Seed de Producao Limpa (01_seed_producao.sql)...
+echo Injetando Roles RBAC, Permissoes Essenciais e Configuracoes Globais...
+echo ===============================================================================
+echo.
+docker exec -i sira-postgres psql -U sira_admin -d sira < "%ROOT_DIR%database\seeds\01_seed_producao.sql"
+if %ERRORLEVEL% EQU 0 (
+    echo.
+    echo [SUCESSO] Seed de producao limpa aplicado com exito!
+) else (
+    echo.
+    echo [ERRO] Falha ao aplicar o seed de producao.
+)
+if not "%1"=="" exit /b 0
+pause
+goto MENU
+
+:RESET_BANCO
+cls
+echo ===============================================================================
+echo ATENCAO: Esta operacao ira limpar todos os volumes do PostgreSQL e recriar
+echo todos os schemas e tabelas a partir dos scripts em database/init/!
+echo ===============================================================================
+set "CONFIRMA="
+set /p "CONFIRMA=Deseja realmente continuar? (S/N): "
+if /i not "%CONFIRMA%"=="S" goto MENU
+echo.
+echo [1/3] Parando conteineres e destruindo volumes antigos...
+docker compose down -v
+echo.
+echo [2/3] Subindo conteineres com inicializacao automatica das tabelas...
+docker compose up -d
+echo.
+echo [3/3] Aguardando banco inicializar...
+timeout /t 6 /nobreak >nul
+docker exec sira-postgres pg_isready -U sira_admin -d sira
+echo.
+echo [SUCESSO] Banco de dados SIRA resetado e recriado com sucesso!
 if not "%1"=="" exit /b 0
 pause
 goto MENU
