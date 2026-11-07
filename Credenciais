@@ -1,0 +1,19 @@
+Como Acessar:
+
+Abra seu navegador e acesse: 👉 http://localhost:8080
+
+Na tela de login do pgAdmin, insira as credenciais:
+
+Email: admin@sira.com
+Senha: Admin@2026
+
+Conectando ao Banco:
+
+Na barra lateral esquerda, em Servers, você verá o servidor já pré-configurado:
+SIRA PostgreSQL (sira-postgres).
+Clique nele para expandir e, quando solicitar a senha do banco PostgreSQL, digite:
+Sira@2026 (você pode marcar a opção "Save password" para não pedir mais).
+
+Ao abrir a árvore de navegação em Databases > sira > Schemas, você já verá os 6 schemas 
+(core, academico, auditoria, etc.) e as tabelas criadas com a carga inicial de dados.
+

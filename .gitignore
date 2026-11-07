@@ -58,3 +58,4 @@ junit.xml
 *.pid
 *.seed
 *.pid.lock
+*.Credenciais
