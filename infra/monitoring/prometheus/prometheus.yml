@@ -1,0 +1,17 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  - job_name: 'sira-api'
+    metrics_path: '/api/v1/metrics'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['host.docker.internal:3000']
+        labels:
+          app: 'sira-backend'
+          env: 'development'
+
+  - job_name: 'sira-prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

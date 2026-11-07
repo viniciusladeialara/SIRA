@@ -6,6 +6,7 @@ import { AuthService } from './auth.service.js';
 import { AuthController } from './auth.controller.js';
 import { JwtStrategy } from './strategies/jwt.strategy.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
+import { RateLimitGuard } from '../../common/guards/rate-limit.guard.js';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
   providers: [
     AuthService,
     JwtStrategy,
+    RateLimitGuard,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

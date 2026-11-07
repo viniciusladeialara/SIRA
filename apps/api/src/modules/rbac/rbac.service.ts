@@ -68,6 +68,17 @@ export class RbacService {
   }
 
   /**
+   * Verifica se o usuário possui determinada permissão (administrador sempre possui acesso irrestrito)
+   */
+  async hasPermission(userId: string, permission: string, userRoles: string[] = []): Promise<boolean> {
+    if (userRoles.includes('administrador')) {
+      return true;
+    }
+    const permissions = await this.getUserPermissions(userId);
+    return permissions.includes(permission);
+  }
+
+  /**
    * Invalida o cache de permissões do usuário (disparado ao alterar perfis ou permissões)
    */
   async invalidateUserPermissions(userId: string): Promise<void> {

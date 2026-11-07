@@ -6,7 +6,7 @@ export class AmbientesService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(tenantId?: string | null) {
-    const where: any = { ativo: true };
+    const where: any = { ativo: true, excluido_em: null };
     if (tenantId) {
       where.unidade_id = tenantId;
     }
@@ -22,8 +22,8 @@ export class AmbientesService {
   }
 
   async findById(id: string) {
-    const item = await this.prisma.ambientes.findUnique({
-      where: { id },
+    const item = await this.prisma.ambientes.findFirst({
+      where: { id, excluido_em: null },
       include: {
         unidades: true,
       },
@@ -74,10 +74,20 @@ export class AmbientesService {
     });
   }
 
-  async delete(id: string) {
+  async delete(id: string, executorId?: string) {
     await this.findById(id);
-    return this.prisma.ambientes.delete({
+    return this.prisma.ambientes.update({
       where: { id },
+      data: {
+        ativo: false,
+        excluido_em: new Date(),
+        excluido_por: executorId || null,
+        atualizado_em: new Date(),
+      },
     });
+  }
+
+  async remove(id: string, executorId?: string) {
+    return this.delete(id, executorId);
   }
 }

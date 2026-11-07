@@ -365,4 +365,21 @@ export const apiService = {
       return { status: 'down' };
     }
   },
+
+  // --- Feature Flags (PRD Enterprise V2) ---
+  async getFeatureFlags(): Promise<Record<string, boolean>> {
+    try {
+      const res = await this.request('/feature-flags');
+      return res.flags || {};
+    } catch (err) {
+      console.warn('Não foi possível carregar flags do servidor, usando padrões locais:', err);
+      return {
+        optimizer_enabled: false,
+        reports_enabled: true,
+        teacher_swap_enabled: true,
+        dashboard_advanced: true,
+        experimental_scheduler: false,
+      };
+    }
+  },
 };

@@ -88,6 +88,15 @@ export class RedisCacheService {
   }
 
   /**
+   * Executa ping no Redis e retorna a latência em milissegundos
+   */
+  async ping(): Promise<number> {
+    const start = Date.now();
+    await this.redis.ping();
+    return Date.now() - start;
+  }
+
+  /**
    * Controle de Rate Limiting por IP ou identificador com janela de tempo deslizante
    */
   async checkRateLimit(
@@ -108,6 +117,55 @@ export class RedisCacheService {
       this.logger.error(`Erro no rate limiter para chave [${key}]:`, error);
       // Fallback permissivo em caso de indisponibilidade momentânea do Redis
       return { allowed: true, current: 0, remaining: limit };
+    }
+  }
+
+  /**
+   * Adiciona rastreamento de sessão/refresh token para um usuário
+   */
+  async trackUserSession(userId: string, refreshToken: string, ttlSeconds: number): Promise<void> {
+    try {
+      const setKey = `sira:user_sessions:${userId}`;
+      await this.redis.sadd(setKey, refreshToken);
+      await this.redis.expire(setKey, ttlSeconds);
+    } catch (error) {
+      this.logger.error(`Erro ao rastrear sessão de usuário [${userId}]:`, error);
+    }
+  }
+
+  /**
+   * Remove um refresh token das sessões rastreadas do usuário
+   */
+  async removeUserSessionToken(userId: string, refreshToken: string): Promise<void> {
+    try {
+      const setKey = `sira:user_sessions:${userId}`;
+      await this.redis.srem(setKey, refreshToken);
+    } catch (error) {
+      this.logger.error(`Erro ao remover sessão rastreada de usuário [${userId}]:`, error);
+    }
+  }
+
+  /**
+   * Revoga todas as sessões ativas de um usuário globalmente (Global Revoke)
+   */
+  async revokeAllUserSessions(userId: string): Promise<number> {
+    try {
+      const setKey = `sira:user_sessions:${userId}`;
+      const tokens = await this.redis.smembers(setKey);
+      let count = 0;
+      for (const token of tokens) {
+        await this.del(`sira:refresh:${token}`);
+        count++;
+      }
+      await this.del(setKey);
+
+      // Também remove qualquer outro padrão remanescente
+      const patternCount = await this.delPattern(`sira:refresh:*${userId}*`);
+      this.logger.log(`[GlobalRevoke] Revogadas ${count + patternCount} sessões para o usuário ${userId}`);
+      return count + patternCount;
+    } catch (error) {
+      this.logger.error(`Erro no Global Revoke para o usuário [${userId}]:`, error);
+      return 0;
     }
   }
 }

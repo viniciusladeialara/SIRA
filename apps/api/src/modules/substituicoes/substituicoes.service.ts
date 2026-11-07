@@ -1,9 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
+import { EventStoreService } from '../event-store/event-store.service.js';
 
 @Injectable()
 export class SubstituicoesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventStore: EventStoreService,
+  ) {}
 
   async findAll(tenantId?: string | null) {
     const where: any = {};
@@ -80,12 +84,27 @@ export class SubstituicoesService {
     });
 
     // Se aprovada, atualiza o docente no agendamento correspondente
-    if (status === 'aprovada' || status === 'approved') {
+    if (status === 'aprovada' || status === 'aprovado' || status === 'approved') {
       await this.prisma.agendamentos.update({
         where: { id: swap.agendamento_id },
         data: {
           docente_id: swap.docente_substituto_id,
         },
+      });
+
+      // Registra evento imutável no Event Store (PRD Enterprise V2 - EPIC 4)
+      await this.eventStore.recordEvent({
+        tipo: 'SWAP_APROVADO',
+        entidade: 'substituicoes',
+        entidade_id: id,
+        payload: {
+          agendamentoId: swap.agendamento_id,
+          docenteOriginalId: swap.docente_original_id,
+          docenteSubstitutoId: swap.docente_substituto_id,
+          avaliadoPor: userId,
+        },
+        usuario_id: userId,
+        unidade_id: swap.unidade_id,
       });
     }
 

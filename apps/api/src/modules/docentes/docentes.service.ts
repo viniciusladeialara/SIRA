@@ -1,12 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
+import { EventStoreService } from '../event-store/event-store.service.js';
 
 @Injectable()
 export class DocentesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventStore: EventStoreService,
+  ) {}
 
   async findAll(tenantId?: string | null) {
-    const where: any = { ativo: true };
+    const where: any = { ativo: true, excluido_em: null };
     if (tenantId) {
       where.unidade_id = tenantId;
     }
@@ -22,8 +26,8 @@ export class DocentesService {
   }
 
   async findById(id: string) {
-    const docente = await this.prisma.docentes.findUnique({
-      where: { id },
+    const docente = await this.prisma.docentes.findFirst({
+      where: { id, excluido_em: null },
       include: {
         unidades: true,
         usuarios: true,
@@ -41,7 +45,7 @@ export class DocentesService {
       throw new Error('unidade_id é obrigatório para cadastrar um docente.');
     }
 
-    return this.prisma.docentes.create({
+    const docente = await this.prisma.docentes.create({
       data: {
         unidade_id: targetUnitId,
         usuario_id: data.usuario_id || null,
@@ -54,6 +58,18 @@ export class DocentesService {
         ativo: data.ativo !== undefined ? data.ativo : true,
       },
     });
+
+    // Registra evento imutável no Event Store (PRD Enterprise V2 - EPIC 4)
+    await this.eventStore.recordEvent({
+      tipo: 'DOCENTE_CRIADO',
+      entidade: 'docentes',
+      entidade_id: docente.id,
+      payload: { nome: docente.nome, matricula: docente.matricula, especialidade: docente.especialidade },
+      usuario_id: docente.usuario_id,
+      unidade_id: docente.unidade_id,
+    });
+
+    return docente;
   }
 
   async update(id: string, data: any) {
@@ -75,10 +91,16 @@ export class DocentesService {
     });
   }
 
-  async delete(id: string) {
+  async delete(id: string, executorId?: string) {
     await this.findById(id);
-    return this.prisma.docentes.delete({
+    return this.prisma.docentes.update({
       where: { id },
+      data: {
+        ativo: false,
+        excluido_em: new Date(),
+        excluido_por: executorId || null,
+        atualizado_em: new Date(),
+      },
     });
   }
 }

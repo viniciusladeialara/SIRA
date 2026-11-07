@@ -12,4 +12,8 @@ export class LoginDto {
   @IsString({ message: 'A senha deve ser uma cadeia de caracteres.' })
   @IsOptional()
   password?: string;
+
+  @IsString({ message: 'O deviceId deve ser uma cadeia de caracteres.' })
+  @IsOptional()
+  deviceId?: string;
 }

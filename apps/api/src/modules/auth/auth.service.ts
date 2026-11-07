@@ -68,9 +68,9 @@ export class AuthService {
   }
 
   /**
-   * Autenticação e emissão inicial de Access Token + Refresh Token
+   * Autenticação e emissão inicial de Access Token + Refresh Token com Device Tracking
    */
-  async login(loginDto: LoginDto, ip?: string, userAgent?: string) {
+  async login(loginDto: LoginDto, ip?: string, userAgent?: string, deviceId?: string) {
     const rawPassword = loginDto.senha || loginDto.password;
     if (!rawPassword) {
       throw new UnauthorizedException('A senha é obrigatória.');
@@ -87,10 +87,21 @@ export class AuthService {
 
     const accessToken = this.jwtService.sign(payload);
     const refreshToken = randomUUID();
+    const effectiveDeviceId = deviceId || loginDto.deviceId || 'browser-client';
 
-    // Armazena o refresh token no Redis associado ao ID do usuário com TTL de 7 dias
+    // Armazena a sessão e metadados de Device Tracking no Redis
+    const sessionData = {
+      userId: user.id,
+      email: user.email,
+      deviceId: effectiveDeviceId,
+      ip: ip || '127.0.0.1',
+      userAgent: userAgent || 'unknown',
+      createdAt: new Date().toISOString(),
+    };
+
     const refreshKey = `sira:refresh:${refreshToken}`;
-    await this.redisCache.set(refreshKey, { userId: user.id, email: user.email }, this.REFRESH_TOKEN_TTL);
+    await this.redisCache.set(refreshKey, sessionData, this.REFRESH_TOKEN_TTL);
+    await this.redisCache.trackUserSession(user.id, refreshToken, this.REFRESH_TOKEN_TTL);
 
     // Registro na trilha imutável de auditoria
     try {
@@ -105,7 +116,7 @@ export class AuthService {
           acao: 'LOGIN',
           ip: ip || 'unknown',
           user_agent: userAgent || 'unknown',
-          dados_novos: { evento: 'LOGIN_SUCESSO', email: user.email },
+          dados_novos: { evento: 'LOGIN_SUCESSO', email: user.email, deviceId: effectiveDeviceId },
         },
       });
     } catch (auditError) {
@@ -128,18 +139,24 @@ export class AuthService {
   }
 
   /**
-   * Renovação de Access Token via Refresh Token com rotação automática
+   * Renovação de Access Token via Refresh Token com rotação automática estrita
    */
-  async refreshTokens(dto: RefreshTokenDto) {
+  async refreshTokens(dto: RefreshTokenDto, ip?: string, userAgent?: string, deviceId?: string) {
     const refreshKey = `sira:refresh:${dto.refreshToken}`;
-    const session = await this.redisCache.get<{ userId: string; email: string }>(refreshKey);
+    const session = await this.redisCache.get<{
+      userId: string;
+      email: string;
+      deviceId?: string;
+      ip?: string;
+    }>(refreshKey);
 
     if (!session) {
-      throw new UnauthorizedException('Refresh token expirado ou inválido.');
+      throw new UnauthorizedException('Refresh token expirado, inválido ou já rotacionado.');
     }
 
     // Invalida o refresh token utilizado (Rotação de Refresh Token)
     await this.redisCache.del(refreshKey);
+    await this.redisCache.removeUserSessionToken(session.userId, dto.refreshToken);
 
     // Busca dados atualizados do usuário
     const usuario = await this.prisma.usuarios.findUnique({
@@ -170,16 +187,62 @@ export class AuthService {
 
     const newAccessToken = this.jwtService.sign(payload);
     const newRefreshToken = randomUUID();
+    const effectiveDeviceId = deviceId || session.deviceId || 'browser-client';
 
-    // Grava novo refresh token no Redis
+    // Grava novo refresh token com Device Tracking preservado
     const newRefreshKey = `sira:refresh:${newRefreshToken}`;
-    await this.redisCache.set(newRefreshKey, { userId: usuario.id, email: usuario.email }, this.REFRESH_TOKEN_TTL);
+    await this.redisCache.set(
+      newRefreshKey,
+      {
+        userId: usuario.id,
+        email: usuario.email,
+        deviceId: effectiveDeviceId,
+        ip: ip || session.ip || '127.0.0.1',
+        userAgent: userAgent || 'unknown',
+        rotatedFrom: dto.refreshToken,
+        rotatedAt: new Date().toISOString(),
+      },
+      this.REFRESH_TOKEN_TTL,
+    );
+    await this.redisCache.trackUserSession(usuario.id, newRefreshToken, this.REFRESH_TOKEN_TTL);
 
     return {
       access_token: newAccessToken,
       refresh_token: newRefreshToken,
       token_type: 'Bearer',
       expires_in: 3600,
+    };
+  }
+
+  /**
+   * Revoga todas as sessões ativas do usuário em todos os dispositivos (Global Revoke)
+   */
+  async revokeAll(userId: string, requestingUserEmail?: string) {
+    const revokedCount = await this.redisCache.revokeAllUserSessions(userId);
+
+    try {
+      await this.prisma.logs.create({
+        data: {
+          usuario_id: userId,
+          usuario_email: requestingUserEmail || 'system',
+          schema_name: 'core',
+          tabela: 'usuarios',
+          registro_id: userId,
+          acao: 'GLOBAL_REVOKE',
+          dados_novos: {
+            evento: 'REVOGACAO_GLOBAL_SESSOES',
+            totalRevogados: revokedCount,
+            timestamp: new Date().toISOString(),
+          },
+        },
+      });
+    } catch (auditError) {
+      this.logger.warn('Falha não-bloqueante ao registrar log de global revoke:', auditError);
+    }
+
+    return {
+      status: 'SUCESSO',
+      mensagem: `Todas as sessões ativas (${revokedCount}) foram revogadas com sucesso.`,
     };
   }
 

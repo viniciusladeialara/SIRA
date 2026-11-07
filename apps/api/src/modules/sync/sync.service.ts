@@ -4,6 +4,7 @@ import * as bcrypt from 'bcrypt';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
+import { EventStoreService } from '../event-store/event-store.service.js';
 import { PromoteDto } from './dto/promote.dto.js';
 import { MirrorDto } from './dto/mirror.dto.js';
 
@@ -14,7 +15,10 @@ export class SyncService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(SyncService.name);
   private prismaTest!: PrismaClient;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventStore: EventStoreService,
+  ) {}
 
   async onModuleInit() {
     const testUrl = process.env.DATABASE_TEST_URL || 'postgresql://sira_admin:Sira@2026@localhost:5432/sira_teste';
@@ -444,6 +448,29 @@ export class SyncService implements OnModuleInit, OnModuleDestroy {
           },
         },
       });
+    });
+
+    // Registrar Evento Imutável no Event Store
+    await this.eventStore.emit({
+      tipo: 'PROMOCAO_EXECUTADA',
+      entidade: 'sync',
+      entidade_id: adminUser.id,
+      payload_jsonb: {
+        motivo: dto.motivo,
+        unidade_id: dto.unidadeId || 'TODAS',
+        anoLetivo: dto.anoLetivo,
+        semestre: dto.semestre,
+        registrosPromovidos: {
+          cursos: cursos.length,
+          ambientes: ambientes.length,
+          docentes: docentes.length,
+          turmas: turmas.length,
+          feriados: feriados.length,
+          agendamentos: agendamentos.length,
+        },
+      },
+      usuario_id: adminUser.id,
+      unidade_id: dto.unidadeId || null,
     });
 
     this.logger.log(`Promoção transacional concluída com sucesso! Registros promovidos para Produção.`);

@@ -13,6 +13,8 @@ import {
 } from '@nestjs/common';
 import { DocentesService } from './docentes.service.js';
 import { CurrentTenant } from '../tenant/decorators/current-tenant.decorator.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import type { AuthenticatedUser } from '../auth/interfaces/jwt-payload.interface.js';
 
 @Controller('docentes')
 export class DocentesController {
@@ -46,8 +48,11 @@ export class DocentesController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param('id', ParseUUIDPipe) id: string) {
-    await this.docentesService.delete(id);
+  async delete(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    await this.docentesService.delete(id, user?.id);
   }
 }
 
@@ -78,7 +83,10 @@ export class ProfessoresController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param('id', ParseUUIDPipe) id: string) {
-    await this.docentesService.delete(id);
+  async delete(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    await this.docentesService.delete(id, user?.id);
   }
 }

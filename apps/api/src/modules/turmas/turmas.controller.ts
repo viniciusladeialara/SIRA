@@ -13,6 +13,8 @@ import {
 } from '@nestjs/common';
 import { TurmasService } from './turmas.service.js';
 import { CurrentTenant } from '../tenant/decorators/current-tenant.decorator.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import type { AuthenticatedUser } from '../auth/interfaces/jwt-payload.interface.js';
 
 @Controller('turmas')
 export class TurmasController {
@@ -46,7 +48,10 @@ export class TurmasController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param('id', ParseUUIDPipe) id: string) {
-    await this.turmasService.delete(id);
+  async delete(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    await this.turmasService.delete(id, user?.id);
   }
 }

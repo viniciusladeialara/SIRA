@@ -56,12 +56,55 @@ services:
     networks:
       - sira-network
 
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: sira-prometheus
+    restart: unless-stopped
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./infra/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - sira-network
+
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: sira-grafana
+    restart: unless-stopped
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-Admin@2026}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infra/monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./infra/monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./infra/monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards/sira:ro
+    depends_on:
+      - prometheus
+    networks:
+      - sira-network
+
 volumes:
   postgres_data:
     driver: local
   pgadmin_data:
     driver: local
   redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
     driver: local
 
 networks:

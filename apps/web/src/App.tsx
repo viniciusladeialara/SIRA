@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 // --- Importações de Autenticação e Páginas ---
 // Importa o nosso provedor de autenticação e o hook customizado
 import { AuthProvider, useAuth } from "./lib/AuthContext";
+import { FeatureFlagProvider } from "./contexts/FeatureFlagContext";
 // Importa os componentes de UI que serão as nossas páginas
 import PublicView from "./components/modules/PublicView";
 import StandbyNotice from "./components/common/StandbyNotice";
@@ -104,7 +105,9 @@ const App = () => (
             path="*"
             element={
               <AuthProvider>
-                <AppRoutes />
+                <FeatureFlagProvider>
+                  <AppRoutes />
+                </FeatureFlagProvider>
               </AuthProvider>
             }
           />

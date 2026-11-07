@@ -4,6 +4,7 @@ import {
   ExecutionContext,
   CallHandler,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { TenantContext } from './tenant.context.js';
@@ -11,50 +12,66 @@ import type { AuthenticatedUser } from '../auth/interfaces/jwt-payload.interface
 
 @Injectable()
 export class TenantInterceptor implements NestInterceptor {
+  private readonly logger = new Logger(TenantInterceptor.name);
+
   constructor(private readonly tenantContext: TenantContext) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    if (context.getType() !== 'http') {
+      return next.handle();
+    }
+
     const request = context.switchToHttp().getRequest();
     const user = request.user as AuthenticatedUser | undefined;
 
-    // Se a rota for pública ou não houver usuário autenticado, segue fluxo normal
+    // Se a rota for pública ou não houver usuário autenticado no momento
     if (!user) {
       return next.handle();
     }
 
     const isSuperAdmin = user.perfis?.includes('administrador') ?? false;
-    const headerUnitId = (request.headers['x-unidade-id'] as string | undefined)?.trim();
+    const rawHeaderUnitId = request.headers['x-unidade-id'] as string | undefined;
+    const headerTenant = rawHeaderUnitId ? rawHeaderUnitId.trim() : null;
+    const jwtTenant = user.unidadeId ? user.unidadeId.trim() : null;
 
-    let targetUnitId: string | null = null;
+    let contextTenant: string | null = null;
 
-    if (headerUnitId) {
-      // Usuário solicitou explicitamente operar em uma unidade via cabeçalho
+    if (headerTenant) {
       if (isSuperAdmin) {
-        // Administrador tem permissão para atuar em qualquer unidade
-        targetUnitId = headerUnitId;
+        // Administrador tem permissão para chavear o tenant explicitamente via cabeçalho
+        contextTenant = headerTenant;
       } else {
-        // Usuário regular só pode operar se o cabeçalho corresponder à sua própria unidade
-        if (user.unidadeId && user.unidadeId.toLowerCase() === headerUnitId.toLowerCase()) {
-          targetUnitId = user.unidadeId;
-        } else {
+        // Para usuários normais: JWT Tenant e Header Tenant DEVEM coincidir obrigatoriamente
+        if (!jwtTenant || jwtTenant.toLowerCase() !== headerTenant.toLowerCase()) {
+          this.logger.warn(
+            `[Multi-Tenant Divergence] Usuário ${user.id} tentou acessar Header Tenant [${headerTenant}] divergente de seu JWT Tenant [${jwtTenant}]. Operação bloqueada com 403.`,
+          );
           throw new ForbiddenException(
-            'Acesso negado: seu usuário não possui autorização para operar na unidade especificada.',
+            'Violação de Multi-Tenant: Divergência entre JWT Tenant e Header Tenant. Todos os contextos de unidade devem coincidir (403 Forbidden).',
           );
         }
+        contextTenant = jwtTenant;
       }
     } else {
-      // Sem cabeçalho explícito: adota a unidade natural vinculada ao cadastro do usuário
-      targetUnitId = user.unidadeId ?? null;
+      // Sem cabeçalho explícito: herda estritamente o Tenant Context do JWT
+      contextTenant = jwtTenant;
     }
 
-    // Registra no request para conveniência do decorator @CurrentTenant()
-    request.tenantId = targetUnitId;
+    // Validação de Tripla Coincidência (JWT Tenant, Header Tenant se presente, Context Tenant)
+    if (!isSuperAdmin && headerTenant && (jwtTenant !== headerTenant || contextTenant !== jwtTenant)) {
+      throw new ForbiddenException(
+        'Violação estrita de isolamento Multi-Tenant: Tenant Context JWT, Header Tenant e Context Tenant divergentes (403 Forbidden).',
+      );
+    }
 
-    // Encapsula a execução assíncrona do endpoint no AsyncLocalStorage
+    // Registra no request para compatibilidade com o decorator @CurrentTenant()
+    request.tenantId = contextTenant;
+
+    // Encapsula a execução no AsyncLocalStorage isolado por requisição
     return new Observable((subscriber) => {
       this.tenantContext.run(
         {
-          unidadeId: targetUnitId,
+          unidadeId: contextTenant,
           userId: user.id,
           isSuperAdmin,
         },

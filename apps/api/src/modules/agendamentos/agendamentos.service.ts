@@ -1,9 +1,13 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
+import { EventStoreService } from '../event-store/event-store.service.js';
 
 @Injectable()
 export class AgendamentosService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventStore: EventStoreService,
+  ) {}
 
   async findAll(tenantId?: string | null, filters?: { start?: string; end?: string; roomId?: string; teacherId?: string }) {
     const where: any = {};
@@ -74,8 +78,10 @@ export class AgendamentosService {
     });
 
     if (ambienteConflict) {
+      const ambNome = ambienteConflict.ambientes?.nome || 'Ambiente Selecionado';
+      const turmaNome = ambienteConflict.turmas?.nome || 'Outra Turma';
       throw new ConflictException(
-        `Conflito de Ambiente: O ambiente "${ambienteConflict.ambientes.nome}" já está alocado para a turma "${ambienteConflict.turmas.nome}" neste horário.`,
+        `Conflito de Ambiente: O ambiente "${ambNome}" já está alocado para a turma "${turmaNome}" neste horário.`,
       );
     }
 
@@ -95,8 +101,10 @@ export class AgendamentosService {
     });
 
     if (docenteConflict) {
+      const docNome = docenteConflict.docentes?.nome || 'Docente Selecionado';
+      const turmaNome = docenteConflict.turmas?.nome || 'Outra Turma';
       throw new ConflictException(
-        `Conflito de Docente: O(A) professor(a) "${docenteConflict.docentes.nome}" já possui aula agendada com a turma "${docenteConflict.turmas.nome}" neste horário.`,
+        `Conflito de Docente: O(A) professor(a) "${docNome}" já possui aula agendada com a turma "${turmaNome}" neste horário.`,
       );
     }
   }
@@ -117,7 +125,7 @@ export class AgendamentosService {
       await this.checkConflicts(ambienteId, docenteId, dataInicio, dataFim);
     }
 
-    return this.prisma.agendamentos.create({
+    const agendamento = await this.prisma.agendamentos.create({
       data: {
         unidade_id: targetUnitId,
         turma_id: turmaId,
@@ -135,6 +143,24 @@ export class AgendamentosService {
         docentes: true,
       },
     });
+
+    // Registra evento imutável no Event Store (PRD Enterprise V2 - EPIC 4)
+    await this.eventStore.recordEvent({
+      tipo: 'AGENDAMENTO_CRIADO',
+      entidade: 'agendamentos',
+      entidade_id: agendamento.id,
+      payload: {
+        turmaId,
+        ambienteId,
+        docenteId,
+        dataInicio: agendamento.data_inicio,
+        dataFim: agendamento.data_fim,
+      },
+      usuario_id: userId,
+      unidade_id: targetUnitId,
+    });
+
+    return agendamento;
   }
 
   async update(id: string, data: any) {

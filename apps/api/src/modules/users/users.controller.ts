@@ -17,6 +17,8 @@ import { UpdateUserDto } from './dto/update-user.dto.js';
 import { PermissionsGuard } from '../rbac/guards/permissions.guard.js';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator.js';
 import { CurrentTenant } from '../tenant/decorators/current-tenant.decorator.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import type { AuthenticatedUser } from '../auth/interfaces/jwt-payload.interface.js';
 
 @Controller('users')
 @UseGuards(PermissionsGuard)
@@ -51,7 +53,10 @@ export class UsersController {
   @Delete(':id')
   @RequirePermissions('usuarios.excluir')
   @HttpCode(HttpStatus.OK)
-  async remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.usersService.remove(id);
+  async remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.usersService.remove(id, user?.id);
   }
 }

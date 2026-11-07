@@ -6,7 +6,7 @@ export class CursosService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(tenantId?: string | null) {
-    const where: any = { ativo: true };
+    const where: any = { ativo: true, excluido_em: null };
     if (tenantId) {
       where.unidade_id = tenantId;
     }
@@ -25,8 +25,8 @@ export class CursosService {
   }
 
   async findById(id: string) {
-    const curso = await this.prisma.cursos.findUnique({
-      where: { id },
+    const curso = await this.prisma.cursos.findFirst({
+      where: { id, excluido_em: null },
       include: {
         unidades: true,
         turmas: true,
@@ -75,10 +75,16 @@ export class CursosService {
     });
   }
 
-  async delete(id: string) {
+  async delete(id: string, executorId?: string) {
     await this.findById(id);
-    return this.prisma.cursos.delete({
+    return this.prisma.cursos.update({
       where: { id },
+      data: {
+        ativo: false,
+        excluido_em: new Date(),
+        excluido_por: executorId || null,
+        atualizado_em: new Date(),
+      },
     });
   }
 }

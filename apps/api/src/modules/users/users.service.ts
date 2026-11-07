@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, ConflictException, Logger } from '@nestj
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
 import { RbacService } from '../rbac/rbac.service.js';
+import { EventStoreService } from '../event-store/event-store.service.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 
@@ -12,13 +13,17 @@ export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly rbacService: RbacService,
+    private readonly eventStore: EventStoreService,
   ) {}
 
   /**
-   * Lista todos os usuários, opcionalmente filtrados por unidade
+   * Lista todos os usuários, opcionalmente filtrados por unidade (ignora excluídos)
    */
   async findAll(tenantId?: string | null) {
-    const where = tenantId ? { unidade_id: tenantId } : {};
+    const where: any = { excluido_em: null };
+    if (tenantId) {
+      where.unidade_id = tenantId;
+    }
 
     const users = await this.prisma.usuarios.findMany({
       where,
@@ -99,6 +104,16 @@ export class UsersService {
       }
     }
 
+    // Registra evento imutável no Event Store (PRD Enterprise V2 - EPIC 4)
+    await this.eventStore.recordEvent({
+      tipo: 'USUARIO_CRIADO',
+      entidade: 'usuarios',
+      entidade_id: user.id,
+      payload: { nome: user.nome, email: user.email, unidadeId: user.unidade_id },
+      usuario_id: user.id,
+      unidade_id: user.unidade_id,
+    });
+
     return this.findById(user.id);
   }
 
@@ -159,13 +174,25 @@ export class UsersService {
   }
 
   /**
-   * Exclui um usuário
+   * Exclui um usuário utilizando padrão corporativo Soft Delete
    */
-  async remove(id: string) {
+  async remove(id: string, executorId?: string) {
     await this.findById(id);
-    await this.prisma.usuarios.delete({ where: { id } });
+    await this.prisma.usuarios.update({
+      where: { id },
+      data: {
+        ativo: false,
+        excluido_em: new Date(),
+        excluido_por: executorId || null,
+        atualizado_em: new Date(),
+      },
+    });
     await this.rbacService.invalidateUserPermissions(id);
-    return { message: `Usuário [${id}] removido com sucesso.` };
+    return { message: `Usuário [${id}] desativado com sucesso (soft-delete).` };
+  }
+
+  async delete(id: string, executorId?: string) {
+    return this.remove(id, executorId);
   }
 
   /**

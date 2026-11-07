@@ -13,6 +13,8 @@ import {
 } from '@nestjs/common';
 import { CursosService } from './cursos.service.js';
 import { CurrentTenant } from '../tenant/decorators/current-tenant.decorator.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import type { AuthenticatedUser } from '../auth/interfaces/jwt-payload.interface.js';
 
 @Controller('cursos')
 export class CursosController {
@@ -46,7 +48,10 @@ export class CursosController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param('id', ParseUUIDPipe) id: string) {
-    await this.cursosService.delete(id);
+  async delete(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    await this.cursosService.delete(id, user?.id);
   }
 }

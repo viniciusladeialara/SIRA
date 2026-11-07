@@ -13,6 +13,8 @@ import {
 } from '@nestjs/common';
 import { AmbientesService } from './ambientes.service.js';
 import { CurrentTenant } from '../tenant/decorators/current-tenant.decorator.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import type { AuthenticatedUser } from '../auth/interfaces/jwt-payload.interface.js';
 
 @Controller('ambientes')
 export class AmbientesController {
@@ -46,8 +48,11 @@ export class AmbientesController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param('id', ParseUUIDPipe) id: string) {
-    await this.ambientesService.delete(id);
+  async delete(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    await this.ambientesService.delete(id, user?.id);
   }
 }
 
@@ -78,7 +83,10 @@ export class SalasController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param('id', ParseUUIDPipe) id: string) {
-    await this.ambientesService.delete(id);
+  async delete(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    await this.ambientesService.delete(id, user?.id);
   }
 }

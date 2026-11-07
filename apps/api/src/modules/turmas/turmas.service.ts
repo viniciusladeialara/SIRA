@@ -1,12 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
+import { EventStoreService } from '../event-store/event-store.service.js';
 
 @Injectable()
 export class TurmasService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventStore: EventStoreService,
+  ) {}
 
   async findAll(tenantId?: string | null) {
-    const where: any = { ativo: true };
+    const where: any = { ativo: true, excluido_em: null };
     if (tenantId) {
       where.unidade_id = tenantId;
     }
@@ -25,8 +29,8 @@ export class TurmasService {
   }
 
   async findById(id: string) {
-    const turma = await this.prisma.turmas.findUnique({
-      where: { id },
+    const turma = await this.prisma.turmas.findFirst({
+      where: { id, excluido_em: null },
       include: {
         cursos: true,
         unidades: true,
@@ -50,7 +54,7 @@ export class TurmasService {
       throw new Error('unidade_id é obrigatório para cadastrar uma turma.');
     }
 
-    return this.prisma.turmas.create({
+    const turma = await this.prisma.turmas.create({
       data: {
         unidade_id: targetUnitId,
         curso_id: data.curso_id || data.courseId,
@@ -63,6 +67,17 @@ export class TurmasService {
         ativo: data.ativo !== undefined ? data.ativo : true,
       },
     });
+
+    // Registra evento imutável no Event Store (PRD Enterprise V2 - EPIC 4)
+    await this.eventStore.recordEvent({
+      tipo: 'TURMA_CRIADA',
+      entidade: 'turmas',
+      entidade_id: turma.id,
+      payload: { codigo: turma.codigo, nome: turma.nome, curso_id: turma.curso_id, vagas: turma.vagas },
+      unidade_id: turma.unidade_id,
+    });
+
+    return turma;
   }
 
   async update(id: string, data: any) {
@@ -85,10 +100,16 @@ export class TurmasService {
     });
   }
 
-  async delete(id: string) {
+  async delete(id: string, executorId?: string) {
     await this.findById(id);
-    return this.prisma.turmas.delete({
+    return this.prisma.turmas.update({
       where: { id },
+      data: {
+        ativo: false,
+        excluido_em: new Date(),
+        excluido_por: executorId || null,
+        atualizado_em: new Date(),
+      },
     });
   }
 }

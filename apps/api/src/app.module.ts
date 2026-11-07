@@ -19,6 +19,11 @@ import { AgendamentosModule } from './modules/agendamentos/agendamentos.module.j
 import { FeriadosModule } from './modules/feriados/feriados.module.js';
 import { SubstituicoesModule } from './modules/substituicoes/substituicoes.module.js';
 import { SyncModule } from './modules/sync/sync.module.js';
+import { ReportsModule } from './modules/reports/reports.module.js';
+import { FeatureFlagModule } from './modules/feature-flags/feature-flag.module.js';
+import { EventStoreModule } from './modules/event-store/event-store.module.js';
+import { WorkflowModule } from './modules/workflow/workflow.module.js';
+import { MetricsModule } from './modules/metrics/metrics.module.js';
 import { AuditModule } from './infrastructure/interceptors/audit.module.js';
 import { HttpExceptionFilter } from './infrastructure/filters/http-exception.filter.js';
 
@@ -31,9 +36,13 @@ import { HttpExceptionFilter } from './infrastructure/filters/http-exception.fil
     PrismaModule,
     RedisModule,
     AuditModule,
+    EventStoreModule,
+    WorkflowModule,
+    MetricsModule,
     AuthModule,
     RbacModule,
     TenantModule,
+    FeatureFlagModule,
     UsersModule,
     UnitsModule,
     RolesModule,
@@ -45,6 +54,7 @@ import { HttpExceptionFilter } from './infrastructure/filters/http-exception.fil
     FeriadosModule,
     SubstituicoesModule,
     SyncModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [

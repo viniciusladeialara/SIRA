@@ -1,0 +1,159 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 1,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "title": "Visão Geral de Saúde dos Serviços (PostgreSQL & Redis)",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "options": { "0": { "color": "red", "text": "DOWN" }, "1": { "color": "green", "text": "UP" } }, "type": "value" }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+      "id": 1,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "title": "PostgreSQL Status",
+      "type": "stat",
+      "targets": [{ "expr": "sira_database_connected", "refId": "A" }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "options": { "0": { "color": "red", "text": "DOWN" }, "1": { "color": "green", "text": "UP" } }, "type": "value" }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+      "id": 2,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "title": "Redis Status",
+      "type": "stat",
+      "targets": [{ "expr": "sira_redis_connected", "refId": "A" }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+      "id": 3,
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "title": "PostgreSQL Latência (Ping)",
+      "type": "stat",
+      "targets": [{ "expr": "sira_database_query_duration_seconds * 1000", "refId": "A" }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+      "id": 4,
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "title": "Redis Latência (Ping)",
+      "type": "stat",
+      "targets": [{ "expr": "sira_redis_ping_duration_seconds * 1000", "refId": "A" }]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 101,
+      "title": "Métricas de Aplicação (NestJS API)",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "reqps" }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "id": 5,
+      "title": "Taxa de Requisições HTTP (req/s)",
+      "type": "timeseries",
+      "targets": [{ "expr": "sum(rate(sira_http_requests_total[1m])) by (method, route)", "legendFormat": "{{method}} {{route}}", "refId": "A" }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "s" }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "id": 6,
+      "title": "Tempo de Resposta HTTP (p95 e p50)",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "histogram_quantile(0.95, sum(rate(sira_http_request_duration_seconds_bucket[1m])) by (le))", "legendFormat": "p95 Latência", "refId": "A" },
+        { "expr": "histogram_quantile(0.50, sum(rate(sira_http_request_duration_seconds_bucket[1m])) by (le))", "legendFormat": "p50 Latência", "refId": "B" }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+      "id": 102,
+      "title": "Recursos do Sistema (CPU & RAM)",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "percentunit" }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
+      "id": 7,
+      "title": "Uso de CPU do Processo Node.js",
+      "type": "timeseries",
+      "targets": [{ "expr": "rate(process_cpu_seconds_total[1m])", "legendFormat": "CPU %", "refId": "A" }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "bytes" }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 15 },
+      "id": 8,
+      "title": "Memória RAM do Processo Node.js",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "process_resident_memory_bytes", "legendFormat": "Resident Memory (RSS)", "refId": "A" },
+        { "expr": "nodejs_heap_size_used_bytes", "legendFormat": "Heap Usado", "refId": "B" }
+      ]
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["sira", "enterprise", "monitoring"],
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "SIRA Enterprise - Visão Geral do Sistema",
+  "uid": "sira-overview",
+  "version": 1
+}

@@ -6,7 +6,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["academico", "auditoria", "core", "planejamento", "producao", "relatorios"]
+  schemas  = ["academico", "auditoria", "core", "planejamento", "producao", "relatorios", "workflow"]
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -40,6 +40,30 @@ model configuracoes_globais {
   descricao     String?
   atualizado_em DateTime @default(now()) @db.Timestamptz(6)
 
+  @@schema("core")
+}
+
+model seed_history {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  versao        String   @unique @db.VarChar(50)
+  descricao     String   @db.VarChar(255)
+  executado_em  DateTime @default(now()) @db.Timestamptz(6)
+  executado_por String   @default("sistema") @db.VarChar(100)
+
+  @@index([versao], map: "idx_seed_history_versao")
+  @@schema("core")
+}
+
+model feature_flags {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nome           String    @unique @db.VarChar(100)
+  ativo          Boolean   @default(false)
+  ambiente       String    @default("all") @db.VarChar(50)
+  descricao      String?
+  atualizado_em  DateTime  @default(now()) @db.Timestamptz(6)
+  atualizado_por String?   @db.Uuid
+
+  @@index([nome], map: "idx_feature_flags_nome")
   @@schema("core")
 }
 
@@ -128,6 +152,8 @@ model usuarios {
   email          String           @unique @db.VarChar(255)
   senha_hash     String           @db.VarChar(255)
   ativo          Boolean          @default(true)
+  excluido_em    DateTime?        @db.Timestamptz(6)
+  excluido_por   String?          @db.Uuid
   criado_em      DateTime         @default(now()) @db.Timestamptz(6)
   atualizado_em  DateTime         @default(now()) @db.Timestamptz(6)
   docentes       docentes[]
@@ -152,6 +178,8 @@ model ambientes {
   bloco         String?        @default("Bloco A") @db.VarChar(50)
   andar         String?        @default("TÃ©rreo") @db.VarChar(50)
   ativo         Boolean        @default(true)
+  excluido_em   DateTime?      @db.Timestamptz(6)
+  excluido_por  String?        @db.Uuid
   recursos      Json?          @default("{}")
   criado_em     DateTime       @default(now()) @db.Timestamptz(6)
   atualizado_em DateTime       @default(now()) @db.Timestamptz(6)
@@ -166,17 +194,19 @@ model ambientes {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model cursos {
-  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  unidade_id    String   @db.Uuid
-  codigo        String   @db.VarChar(50)
-  nome          String   @db.VarChar(255)
-  modalidade    String?  @default("presencial") @db.VarChar(50)
-  nivel         String?  @default("tecnico") @db.VarChar(50)
-  carga_horaria Int      @default(0)
-  ativo         Boolean  @default(true)
-  criado_em     DateTime @default(now()) @db.Timestamptz(6)
-  atualizado_em DateTime @default(now()) @db.Timestamptz(6)
-  unidades      unidades @relation(fields: [unidade_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  unidade_id    String    @db.Uuid
+  codigo        String    @db.VarChar(50)
+  nome          String    @db.VarChar(255)
+  modalidade    String?   @default("presencial") @db.VarChar(50)
+  nivel         String?   @default("tecnico") @db.VarChar(50)
+  carga_horaria Int       @default(0)
+  ativo         Boolean   @default(true)
+  excluido_em   DateTime? @db.Timestamptz(6)
+  excluido_por  String?   @db.Uuid
+  criado_em     DateTime  @default(now()) @db.Timestamptz(6)
+  atualizado_em DateTime  @default(now()) @db.Timestamptz(6)
+  unidades      unidades  @relation(fields: [unidade_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   turmas        turmas[]
 
   @@unique([unidade_id, codigo], map: "uq_cursos_unidade_codigo")
@@ -197,6 +227,8 @@ model docentes {
   especialidade                                               String?         @db.VarChar(255)
   carga_horaria_max                                           Int             @default(40)
   ativo                                                       Boolean         @default(true)
+  excluido_em                                                 DateTime?       @db.Timestamptz(6)
+  excluido_por                                                String?         @db.Uuid
   criado_em                                                   DateTime        @default(now()) @db.Timestamptz(6)
   atualizado_em                                               DateTime        @default(now()) @db.Timestamptz(6)
   unidades                                                    unidades        @relation(fields: [unidade_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
@@ -223,6 +255,8 @@ model turmas {
   data_fim      DateTime       @db.Date
   vagas         Int            @default(30)
   ativo         Boolean        @default(true)
+  excluido_em   DateTime?      @db.Timestamptz(6)
+  excluido_por  String?        @db.Uuid
   criado_em     DateTime       @default(now()) @db.Timestamptz(6)
   atualizado_em DateTime       @default(now()) @db.Timestamptz(6)
   cursos        cursos         @relation(fields: [curso_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
@@ -300,4 +334,108 @@ model substituicoes {
   @@index([agendamento_id], map: "idx_substituicoes_agendamento")
   @@index([unidade_id], map: "idx_substituicoes_unidade")
   @@schema("planejamento")
+}
+
+// ==============================================================================
+// SCHEMA WORKFLOW (PRD Enterprise V2 - EPIC 4 & EPIC 5)
+// ==============================================================================
+
+model fluxos {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  codigo       String         @unique @db.VarChar(50)
+  nome         String         @db.VarChar(100)
+  descricao    String?
+  ativo        Boolean        @default(true)
+  criado_em    DateTime       @default(now()) @db.Timestamptz(6)
+  etapas       etapas[]
+  solicitacoes solicitacoes[]
+
+  @@schema("workflow")
+}
+
+model etapas {
+  id               String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fluxo_id         String       @db.Uuid
+  ordem            Int
+  nome             String       @db.VarChar(100)
+  perfil_aprovador String       @db.VarChar(50)
+  obrigatoria      Boolean      @default(true)
+  fluxos           fluxos       @relation(fields: [fluxo_id], references: [id], onDelete: Cascade)
+  aprovacoes       aprovacoes[]
+
+  @@schema("workflow")
+}
+
+model solicitacoes {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fluxo_id       String        @db.Uuid
+  unidade_id     String?       @db.Uuid
+  solicitante_id String        @db.Uuid
+  tipo           String        @db.VarChar(50)
+  status         String        @default("pendente") @db.VarChar(50)
+  dados_jsonb    Json
+  criado_em      DateTime      @default(now()) @db.Timestamptz(6)
+  atualizado_em  DateTime      @default(now()) @db.Timestamptz(6)
+  fluxos         fluxos        @relation(fields: [fluxo_id], references: [id], onDelete: Cascade)
+  aprovacoes     aprovacoes[]
+  assinaturas    assinaturas[]
+  historicos     historicos[]
+
+  @@index([status], map: "idx_solicitacoes_status")
+  @@index([solicitante_id], map: "idx_solicitacoes_solicitante")
+  @@schema("workflow")
+}
+
+model aprovacoes {
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  solicitacao_id String       @db.Uuid
+  etapa_id       String       @db.Uuid
+  aprovador_id   String       @db.Uuid
+  decisao        String       @db.VarChar(50)
+  parecer        String?
+  decidido_em    DateTime     @default(now()) @db.Timestamptz(6)
+  solicitacoes   solicitacoes @relation(fields: [solicitacao_id], references: [id], onDelete: Cascade)
+  etapas         etapas       @relation(fields: [etapa_id], references: [id], onDelete: Cascade)
+
+  @@schema("workflow")
+}
+
+model assinaturas {
+  id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  solicitacao_id  String       @db.Uuid
+  usuario_id      String       @db.Uuid
+  hash_assinatura String       @db.VarChar(255)
+  assinado_em     DateTime     @default(now()) @db.Timestamptz(6)
+  solicitacoes    solicitacoes @relation(fields: [solicitacao_id], references: [id], onDelete: Cascade)
+
+  @@schema("workflow")
+}
+
+model historicos {
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  solicitacao_id String       @db.Uuid
+  de_status      String       @db.VarChar(50)
+  para_status    String       @db.VarChar(50)
+  usuario_id     String?      @db.Uuid
+  motivo         String?
+  registrado_em  DateTime     @default(now()) @db.Timestamptz(6)
+  solicitacoes   solicitacoes @relation(fields: [solicitacao_id], references: [id], onDelete: Cascade)
+
+  @@schema("workflow")
+}
+
+model eventos {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tipo          String   @db.VarChar(100)
+  entidade      String   @db.VarChar(100)
+  entidade_id   String   @db.VarChar(255)
+  payload_jsonb Json
+  usuario_id    String?  @db.Uuid
+  unidade_id    String?  @db.Uuid
+  criado_em     DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([entidade, entidade_id], map: "idx_eventos_entidade")
+  @@index([tipo], map: "idx_eventos_tipo")
+  @@index([criado_em(sort: Desc)], map: "idx_eventos_criado_em")
+  @@schema("workflow")
 }
