@@ -346,7 +346,11 @@ export function UserManagementModule() {
   };
 
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name?.toLowerCase().includes(searchTerm.toLowerCase()) || user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    if (!user) return false;
+    const search = (searchTerm || '').trim().toLowerCase();
+    const userName = (user.name || (user as any).nome || '').toLowerCase();
+    const userEmail = (user.email || '').toLowerCase();
+    const matchesSearch = !search || userName.includes(search) || userEmail.includes(search);
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
 
     // Regra de Consulta (docs/Estrutura de Papéis.md):

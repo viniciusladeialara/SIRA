@@ -71,7 +71,13 @@ export class RbacService {
    * Verifica se o usuário possui determinada permissão (administrador sempre possui acesso irrestrito)
    */
   async hasPermission(userId: string, permission: string, userRoles: string[] = []): Promise<boolean> {
-    if (userRoles.includes('administrador')) {
+    const isFullAccess =
+      userRoles.includes('administrador') ||
+      userRoles.includes('super_admin') ||
+      userRoles.includes('admin') ||
+      userRoles.includes('SUPER_ADMIN') ||
+      userRoles.includes('ADMIN');
+    if (isFullAccess) {
       return true;
     }
     const permissions = await this.getUserPermissions(userId);

@@ -291,35 +291,37 @@ export class UsersService {
       data: dataToUpdate,
     });
 
-    // 1. Atualização de Perfis
-    const requestedProfiles = this.extractProfileSlugs(dto);
-    if (requestedProfiles.length > 0) {
-      if (!isActorSuper) {
-        const triesToPromote = requestedProfiles.some((p) =>
-          ['super_admin', 'administrador'].includes(p),
-        );
-        if (triesToPromote) {
-          throw new ForbiddenException(
-            'Administradores escolares não podem conceder perfil de administrador.',
+    // 1. Atualização de Perfis (Apenas se dto.perfis ou dto.role foram explicitamente informados)
+    if (dto.perfis !== undefined || dto.role !== undefined) {
+      const requestedProfiles = this.extractProfileSlugs(dto);
+      if (requestedProfiles.length > 0) {
+        if (!isActorSuper) {
+          const triesToPromote = requestedProfiles.some((p) =>
+            ['super_admin', 'administrador'].includes(p),
           );
+          if (triesToPromote) {
+            throw new ForbiddenException(
+              'Administradores escolares não podem conceder perfil de administrador.',
+            );
+          }
         }
-      }
 
-      await this.prisma.usuario_perfis.deleteMany({
-        where: { usuario_id: id },
-      });
-
-      const foundProfiles = await this.prisma.perfis.findMany({
-        where: { slug: { in: requestedProfiles } },
-      });
-
-      for (const p of foundProfiles) {
-        await this.prisma.usuario_perfis.create({
-          data: {
-            usuario_id: id,
-            perfil_id: p.id,
-          },
+        await this.prisma.usuario_perfis.deleteMany({
+          where: { usuario_id: id },
         });
+
+        const foundProfiles = await this.prisma.perfis.findMany({
+          where: { slug: { in: requestedProfiles } },
+        });
+
+        for (const p of foundProfiles) {
+          await this.prisma.usuario_perfis.create({
+            data: {
+              usuario_id: id,
+              perfil_id: p.id,
+            },
+          });
+        }
       }
     }
 
@@ -423,19 +425,39 @@ export class UsersService {
    * Helper: Extrai e normaliza slugs de perfis
    */
   private extractProfileSlugs(dto: CreateUserDto | UpdateUserDto): string[] {
+    const rawList: string[] = [];
     if (dto.perfis && dto.perfis.length > 0) {
-      return dto.perfis.map((p) => p.toLowerCase());
+      rawList.push(...dto.perfis);
     }
     if (dto.role) {
-      const r = dto.role.toUpperCase();
-      if (r === 'SUPER_ADMIN') return ['super_admin', 'administrador'];
-      if (r === 'ADMIN') return ['administrador'];
-      if (r === 'PROFESSOR') return ['professor'];
-      if (r === 'USER') return ['coordenador'];
-      if (r === 'PARTNER_SCHOOL') return ['consulta'];
-      return [dto.role.toLowerCase()];
+      rawList.push(dto.role);
     }
-    return ['coordenador'];
+    if (rawList.length === 0) {
+      return [];
+    }
+
+    const normalized = new Set<string>();
+    for (const r of rawList) {
+      const lower = r.toLowerCase();
+      if (lower === 'super_admin' || lower === 'superadmin') {
+        normalized.add('super_admin');
+        normalized.add('administrador');
+      } else if (lower === 'admin' || lower === 'administrador') {
+        normalized.add('administrador');
+      } else if (lower === 'gestor') {
+        normalized.add('gestor');
+        normalized.add('administrador');
+      } else if (lower === 'professor') {
+        normalized.add('professor');
+      } else if (lower === 'consulta' || lower === 'partner_school') {
+        normalized.add('consulta');
+      } else if (lower === 'user' || lower === 'coordenador') {
+        normalized.add('coordenador');
+      } else {
+        normalized.add(lower);
+      }
+    }
+    return Array.from(normalized);
   }
 
   /**

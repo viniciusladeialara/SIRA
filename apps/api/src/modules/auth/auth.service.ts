@@ -67,9 +67,16 @@ export class AuthService {
 
     const perfis = (usuario.usuario_perfis || []).map((up: any) => up.perfis.slug);
     const isSuper =
+      usuario.email === 'admin@sira.local' ||
+      usuario.email === 'admin@sira.com' ||
       perfis.includes('super_admin') ||
       (perfis.includes('administrador') &&
         (usuario.email === 'admin@sira.local' || usuario.email === 'admin@sira.com'));
+
+    if (isSuper) {
+      if (!perfis.includes('super_admin')) perfis.push('super_admin');
+      if (!perfis.includes('administrador')) perfis.push('administrador');
+    }
 
     let unitIds = (usuario.usuario_unidades || []).map((uu: any) => uu.unidade_id);
     if (usuario.unidade_id && !unitIds.includes(usuario.unidade_id)) {
@@ -238,9 +245,16 @@ export class AuthService {
 
     const perfis = (usuario.usuario_perfis || []).map((up: any) => up.perfis.slug);
     const isSuper =
+      usuario.email === 'admin@sira.local' ||
+      usuario.email === 'admin@sira.com' ||
       perfis.includes('super_admin') ||
       (perfis.includes('administrador') &&
         (usuario.email === 'admin@sira.local' || usuario.email === 'admin@sira.com'));
+
+    if (isSuper) {
+      if (!perfis.includes('super_admin')) perfis.push('super_admin');
+      if (!perfis.includes('administrador')) perfis.push('administrador');
+    }
 
     let unitIds = (usuario.usuario_unidades || []).map((uu: any) => uu.unidade_id);
     if (usuario.unidade_id && !unitIds.includes(usuario.unidade_id)) {
