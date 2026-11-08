@@ -136,7 +136,7 @@ echo ===========================================================================
 echo [ETAPA 3/4] Inicializando API Backend (NestJS)...
 echo ===============================================================================
 echo [i] Abrindo janela dedicada para a API SIRA na porta 3000...
-start "SIRA [Backend API :3000]" cmd /k "title SIRA - Backend API :3000 && cd /d "%ROOT_DIR%apps\api" && npm run start:dev"
+start "SIRA_SERVER_API" cmd /k "title SIRA_SERVER_API && cd /d "%ROOT_DIR%apps\api" && npm run start:dev"
 
 echo [i] Aguardando 4 segundos para o bootstrap do NestJS...
 timeout /t 4 /nobreak >nul
@@ -146,7 +146,7 @@ echo ===========================================================================
 echo [ETAPA 4/4] Inicializando Frontend Web (Vite + React)...
 echo ===============================================================================
 echo [i] Abrindo janela dedicada para o Frontend SIRA na porta 5173...
-start "SIRA [Frontend Web :5173]" cmd /k "title SIRA - Frontend Web :5173 && cd /d "%ROOT_DIR%apps\web" && npm run dev"
+start "SIRA_SERVER_WEB" cmd /k "title SIRA_SERVER_WEB && cd /d "%ROOT_DIR%apps\web" && npm run dev"
 
 echo [i] Aguardando 3 segundos para o servidor Vite inicializar...
 timeout /t 3 /nobreak >nul
@@ -191,7 +191,7 @@ cls
 echo ===============================================================================
 echo Iniciando Backend API (NestJS na porta 3000)...
 echo ===============================================================================
-start "SIRA [Backend API :3000]" cmd /k "title SIRA - Backend API :3000 && cd /d "%ROOT_DIR%apps\api" && npm run start:dev"
+start "SIRA_SERVER_API" cmd /k "title SIRA_SERVER_API && cd /d "%ROOT_DIR%apps\api" && npm run start:dev"
 echo [OK] Processo da API NestJS iniciado em nova janela.
 if not "%1"=="" exit /b 0
 pause
@@ -202,7 +202,7 @@ cls
 echo ===============================================================================
 echo Iniciando Frontend Web (Vite na porta 5173)...
 echo ===============================================================================
-start "SIRA [Frontend Web :5173]" cmd /k "title SIRA - Frontend Web :5173 && cd /d "%ROOT_DIR%apps\web" && npm run dev"
+start "SIRA_SERVER_WEB" cmd /k "title SIRA_SERVER_WEB && cd /d "%ROOT_DIR%apps\web" && npm run dev"
 echo [OK] Processo do Frontend iniciado em nova janela.
 if not "%1"=="" exit /b 0
 pause
@@ -218,11 +218,13 @@ echo [1/3] Parando conteineres Docker...
 docker compose down
 echo.
 echo [2/3] Fechando janelas ativas da API e Frontend SIRA...
-taskkill /F /FI "WINDOWTITLE eq SIRA*" >nul 2>&1
+taskkill /F /FI "WINDOWTITLE eq SIRA_SERVER_*" >nul 2>&1
+taskkill /F /FI "WINDOWTITLE eq SIRA - Backend API*" >nul 2>&1
+taskkill /F /FI "WINDOWTITLE eq SIRA - Frontend Web*" >nul 2>&1
 echo.
 echo [3/3] Liberando portas 3000 e 5173 caso existam processos em segundo plano...
 for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr ":3000 :5173"') do (
-    taskkill /F /PID %%a >nul 2>&1
+    if not "%%a"=="0" taskkill /F /PID %%a >nul 2>&1
 )
 echo.
 echo [OK] Todos os servicos e portas foram liberados com sucesso!
