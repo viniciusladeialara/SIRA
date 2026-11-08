@@ -35,6 +35,7 @@ import {
   startOfDay 
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { toSafeDate } from '@/lib/date-utils';
 import { 
   Copy, 
   Calendar, 
@@ -105,7 +106,7 @@ export function ScheduleCopyWeekModal({
   // Agendamentos pertencentes à semana de origem
   const sourceWeekSchedules = useMemo(() => {
     return schedules.filter(s => {
-      const sDate = s.startTime.toDate();
+      const sDate = toSafeDate(s.startTime);
       return sDate >= sourceWeekStart && sDate <= sourceWeekEnd;
     });
   }, [schedules, sourceWeekStart, sourceWeekEnd]);
@@ -139,7 +140,7 @@ export function ScheduleCopyWeekModal({
 
     targetWeeks.forEach(targetWeek => {
       sourceWeekSchedules.forEach(schedule => {
-        const origStart = schedule.startTime.toDate();
+        const origStart = toSafeDate(schedule.startTime);
         const projectedDate = addWeeks(origStart, targetWeek.weekOffset);
 
         if (skipHolidays) {
@@ -180,8 +181,8 @@ export function ScheduleCopyWeekModal({
 
       for (const targetWeek of targetWeeks) {
         for (const schedule of sourceWeekSchedules) {
-          const origStart = schedule.startTime.toDate();
-          const origEnd = schedule.endTime.toDate();
+          const origStart = toSafeDate(schedule.startTime);
+          const origEnd = toSafeDate(schedule.endTime);
 
           const newStart = addWeeks(origStart, targetWeek.weekOffset);
           const newEnd = addWeeks(origEnd, targetWeek.weekOffset);

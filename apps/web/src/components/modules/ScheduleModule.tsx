@@ -12,6 +12,7 @@ import { Timestamp, doc, onSnapshot } from "@/lib/sira-sql-adapter";
 import { db } from "@/lib/db";
 import { startOfWeek, endOfWeek, format, eachDayOfInterval, isSameDay, getHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { toSafeDate, toSafeMillis } from "@/lib/date-utils";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestoreCache } from "@/hooks/useCache";
 import { useNavigate } from "react-router-dom";
@@ -143,8 +144,9 @@ export function ScheduleModule() {
     return { bg: "bg-slate-100", border: "border-slate-500", text: "text-slate-800" };
   }, []);
 
-  const getTurnoAndColor = useCallback((startTime: Timestamp) => {
-    const hour = getHours(startTime.toDate());
+  const getTurnoAndColor = useCallback((startTime: any) => {
+    const d = toSafeDate(startTime);
+    const hour = getHours(d);
     let defaultShift = 'noturno';
     if (hour >= 7 && hour < 12) defaultShift = 'matutino';
     else if (hour >= 13 && hour < 18) defaultShift = 'vespertino';
@@ -246,19 +248,12 @@ export function ScheduleModule() {
     end: endOfWeek(currentDate, { weekStartsOn: 1 }) 
   }).slice(0, 5);
 
-  const toSafeDate = (d: any): Date => {
-    if (!d) return new Date(0);
-    if (typeof d?.toDate === 'function') return d.toDate();
-    if (d instanceof Date) return d;
-    return new Date(d);
-  };
-
   const getSchedulesForRoomAndDay = (roomId: string, day: Date) => {
     return schedules.filter(s => s.roomId === roomId && isSameDay(toSafeDate(s.startTime), day))
       .filter(item => activeTurno === 'todos' || getTurnoAndColor(item.startTime).name === activeTurno)
       .sort((a, b) => {
-        const aTime = typeof a.startTime?.toMillis === 'function' ? a.startTime.toMillis() : toSafeDate(a.startTime).getTime();
-        const bTime = typeof b.startTime?.toMillis === 'function' ? b.startTime.toMillis() : toSafeDate(b.startTime).getTime();
+        const aTime = toSafeMillis(a.startTime);
+        const bTime = toSafeMillis(b.startTime);
         return aTime - bTime;
       });
   };

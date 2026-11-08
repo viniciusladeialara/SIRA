@@ -12,8 +12,19 @@ import {
   ChevronRight, 
   Settings, 
   LayoutDashboard, 
-  ShieldAlert 
+  ShieldAlert,
+  Building 
 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { 
+  Select, 
+  SelectContent, 
+  SelectGroup, 
+  SelectItem, 
+  SelectLabel, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import { SessionStatus } from "@/components/SessionStatus";
 
 // Core Engine Imports
@@ -100,35 +111,57 @@ const Dashboard: React.FC = () => {
     return units;
   }, [units, isSuperAdmin, userUnitIds, userData]);
 
-  const selectedUnitId = userData?.selectedUnitId || userData?.unidadeId || localStorage.getItem('selected_unit_id') || (availableUnits[0]?.id) || "";
+  const initialUnitId = localStorage.getItem('selected_unit_id') || userData?.selectedUnitId || userData?.unidadeId || "";
+  const [currentSelectedUnitId, setCurrentSelectedUnitId] = useState<string>(initialUnitId);
 
-  const handleUnitChange = async (unitId: string) => {
-    if (!currentUser || !unitId || unitId === selectedUnitId) return;
-    const unitObj = availableUnits.find(u => u.id === unitId) || units.find(u => u.id === unitId);
-    const unitName = unitObj?.nome || unitObj?.name || unitId;
-    setChangingUnitName(unitName);
-    setIsUnitChanging(true);
-    localStorage.setItem('selected_unit_id', unitId);
-    try {
-      await updateDoc(doc(db, "users", currentUser.uid), {
-        selectedUnitId: unitId,
-        unidadeId: unitId,
-      });
-    } catch (err) {
-      console.error("Erro ao alternar unidade:", err);
-    }
-    setTimeout(() => setIsUnitChanging(false), 3000);
-  };
-
-  // Garante que a unidade ativa do usuário esteja dentro de suas unidades autorizadas
+  // Mantém a unidade ativa alinhada com as permissões e lista de unidades autorizadas
   useEffect(() => {
     if (availableUnits.length > 0) {
-      const isValid = availableUnits.some(u => u.id === selectedUnitId);
-      if (!isValid && availableUnits[0]) {
-        handleUnitChange(availableUnits[0].id);
+      const match = availableUnits.find(u => 
+        u.id === currentSelectedUnitId || 
+        (u.sigla && u.sigla.toLowerCase() === currentSelectedUnitId.toLowerCase()) ||
+        (u.codigo && u.codigo.toLowerCase().includes(currentSelectedUnitId.toLowerCase()))
+      );
+      if (match) {
+        if (currentSelectedUnitId !== match.id) {
+          setCurrentSelectedUnitId(match.id);
+          localStorage.setItem('selected_unit_id', match.id);
+        }
+      } else {
+        const fallbackId = availableUnits[0].id;
+        setCurrentSelectedUnitId(fallbackId);
+        localStorage.setItem('selected_unit_id', fallbackId);
       }
     }
-  }, [availableUnits, selectedUnitId]);
+  }, [availableUnits, currentSelectedUnitId]);
+
+  const selectedUnitId = currentSelectedUnitId || availableUnits[0]?.id || "";
+
+  const handleUnitChange = async (unitId: string) => {
+    if (!unitId || unitId === currentSelectedUnitId) return;
+    const unitObj = availableUnits.find(u => u.id === unitId) || units.find(u => u.id === unitId);
+    const unitName = unitObj?.nome || unitObj?.name || unitId;
+    
+    setCurrentSelectedUnitId(unitId);
+    localStorage.setItem('selected_unit_id', unitId);
+    setChangingUnitName(unitName);
+    setIsUnitChanging(true);
+
+    // Notifica outros componentes e listeners da troca de unidade
+    window.dispatchEvent(new CustomEvent('unit-changed', { detail: { unitId } }));
+
+    if (currentUser?.uid) {
+      try {
+        await updateDoc(doc(db, "users", currentUser.uid), {
+          selectedUnitId: unitId,
+          unidadeId: unitId,
+        });
+      } catch (err) {
+        console.warn("Aviso ao persistir unidade selecionada no perfil:", err);
+      }
+    }
+    setTimeout(() => setIsUnitChanging(false), 2000);
+  };
 
   useEffect(() => {
     // Subscrever à contagem de conflitos pendentes apenas para ADM
@@ -205,26 +238,68 @@ const Dashboard: React.FC = () => {
       {/* Sidebar / Menu Lateral Dinâmico do Core */}
       <aside className="w-72 bg-gray-900 text-white flex flex-col shadow-lg">
         {/* Seletor de Unidade */}
-        <div className="p-4 border-b border-gray-700 flex flex-col gap-1.5">
-          <span className="text-[10px] uppercase tracking-wider font-bold text-gray-500">Unidade Ativa</span>
+        <div className="p-4 border-b border-gray-700 flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Unidade Ativa</span>
+            {availableUnits.length > 1 && (
+              <span className="text-[9px] uppercase font-bold tracking-wider bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded border border-blue-500/30">
+                Multi-Unidade
+              </span>
+            )}
+          </div>
           {availableUnits.length > 1 ? (
-            <select
-              value={selectedUnitId}
-              onChange={(e) => handleUnitChange(e.target.value)}
-              className="bg-gray-800 text-white border border-gray-700 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold cursor-pointer w-full transition-all duration-200"
-            >
-              {availableUnits.map((u) => {
-                const label = u.nome || u.name || (u.sigla ? `SENAI ${u.sigla}` : `Unidade (${u.id?.slice(0, 8)})`);
-                return (
-                  <option key={u.id} value={u.id} className="bg-gray-900 text-white py-1.5 font-medium">
-                    {label}
-                  </option>
-                );
-              })}
-            </select>
+            <Select value={selectedUnitId} onValueChange={handleUnitChange}>
+              <SelectTrigger className="w-full bg-gray-800 text-white border-gray-700 hover:bg-gray-750 focus:ring-2 focus:ring-blue-500 font-medium text-sm h-10 px-3 flex items-center justify-between rounded-lg shadow-sm">
+                <div className="flex items-center gap-2 truncate text-left">
+                  <Building className="h-4 w-4 text-blue-400 shrink-0" />
+                  <span className="truncate font-semibold text-white">
+                    {availableUnits.find(u => u.id === selectedUnitId)?.nome || 
+                     availableUnits.find(u => u.id === selectedUnitId)?.name || 
+                     "Selecionar Unidade"}
+                  </span>
+                </div>
+              </SelectTrigger>
+              <SelectContent className="bg-gray-900 border border-gray-700 text-white shadow-2xl z-50 min-w-[240px]">
+                <SelectGroup>
+                  <SelectLabel className="text-gray-400 text-[11px] uppercase tracking-wider px-3 py-1.5 font-bold">
+                    Unidades Autorizadas
+                  </SelectLabel>
+                  {availableUnits.map((u) => {
+                    const label = u.nome || u.name || (u.sigla ? `SENAI ${u.sigla}` : `Unidade (${u.id?.slice(0, 8)})`);
+                    const isSelected = u.id === selectedUnitId;
+                    return (
+                      <SelectItem 
+                        key={u.id} 
+                        value={u.id} 
+                        className={cn(
+                          "cursor-pointer px-3 py-2 text-sm font-medium rounded-md my-0.5 transition-colors focus:bg-blue-600 focus:text-white",
+                          isSelected ? "bg-blue-600 text-white font-bold" : "text-gray-200 hover:bg-gray-800 hover:text-white"
+                        )}
+                      >
+                        <div className="flex items-center justify-between w-full gap-2">
+                          <span className="truncate">{label}</span>
+                          {u.sigla && (
+                            <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-gray-800 text-gray-300 border border-gray-700 shrink-0">
+                              {u.sigla}
+                            </span>
+                          )}
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           ) : (
-            <div className="font-bold text-sm text-blue-400 bg-gray-800/80 px-3 py-2 rounded-lg border border-gray-700/60">
-              {units.find(u => u.id === selectedUnitId)?.nome || units.find(u => u.id === selectedUnitId)?.name || availableUnits[0]?.nome || availableUnits[0]?.name || "SENAI Cáceres"}
+            <div className="flex items-center gap-2 font-bold text-sm text-blue-400 bg-gray-800/80 px-3 py-2.5 rounded-lg border border-gray-700/60 shadow-sm">
+              <Building className="h-4 w-4 text-blue-400 shrink-0" />
+              <span className="truncate">
+                {units.find(u => u.id === selectedUnitId)?.nome || 
+                 units.find(u => u.id === selectedUnitId)?.name || 
+                 availableUnits[0]?.nome || 
+                 availableUnits[0]?.name || 
+                 "SENAI Cáceres"}
+              </span>
             </div>
           )}
         </div>

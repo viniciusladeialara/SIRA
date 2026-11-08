@@ -1,6 +1,6 @@
 import React, { ReactNode } from "react";
 import { format } from "date-fns";
-import { formatInTimeZone, getHoursInTimeZone } from "@/lib/date-utils";
+import { formatInTimeZone, getHoursInTimeZone, toSafeDate } from "@/lib/date-utils";
 import { User, Trash2, Edit2, Calendar, Download } from "lucide-react";
 import { Timestamp } from "@/lib/sira-sql-adapter";
 import { clsx } from "clsx";
@@ -122,14 +122,14 @@ export function ScheduleCard({
             </div>
 
             <div className="font-semibold text-slate-900">
-                {formatInTimeZone(item.startTime.toDate(), "HH:mm")} - {formatInTimeZone(item.endTime.toDate(), "HH:mm")}
+                {formatInTimeZone(toSafeDate(item.startTime), "HH:mm")} - {formatInTimeZone(toSafeDate(item.endTime), "HH:mm")}
             </div>
             <div>
                 <Badge variant="secondary" className="max-w-full truncate">
                     {item.className || "Reserva avulsa"} 
                     {item.className && (
                         <span className="ml-1 opacity-60 text-[9px] font-bold">
-                            ({getHoursInTimeZone(item.startTime.toDate()) < 12 ? 'M' : getHoursInTimeZone(item.startTime.toDate()) < 18 ? 'V' : 'N'})
+                            ({getHoursInTimeZone(toSafeDate(item.startTime)) < 12 ? 'M' : getHoursInTimeZone(toSafeDate(item.startTime)) < 18 ? 'V' : 'N'})
                         </span>
                     )}
                 </Badge>

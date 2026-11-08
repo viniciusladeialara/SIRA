@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Users, Building, AlertTriangle } from "lucide-react";
 import { Timestamp } from "@/lib/sira-sql-adapter";
+import { toSafeDate, toSafeMillis } from "@/lib/date-utils";
 
 interface Schedule {
   id: string;
@@ -21,7 +22,7 @@ export function ScheduleSummarySidebar({ schedules, activeTurno }: ScheduleSumma
   const filteredSchedules = activeTurno === 'todos' 
     ? schedules 
     : schedules.filter(s => {
-        const hour = s.startTime.toDate().getHours();
+        const hour = toSafeDate(s.startTime).getHours();
         if (activeTurno === 'matutino') return hour >= 7 && hour < 13;
         if (activeTurno === 'vespertino') return hour >= 13 && hour < 18;
         if (activeTurno === 'noturno') return hour >= 18;
@@ -33,7 +34,7 @@ export function ScheduleSummarySidebar({ schedules, activeTurno }: ScheduleSumma
   
   // Cálculo de horas totais
   const totalHours = filteredSchedules.reduce((acc, s) => {
-    const duration = (s.endTime.toMillis() - s.startTime.toMillis()) / (1000 * 60 * 60);
+    const duration = (toSafeMillis(s.endTime) - toSafeMillis(s.startTime)) / (1000 * 60 * 60);
     return acc + duration;
   }, 0);
 

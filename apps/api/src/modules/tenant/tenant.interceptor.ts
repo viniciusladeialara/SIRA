@@ -33,34 +33,34 @@ export class TenantInterceptor implements NestInterceptor {
     const rawHeaderUnitId = request.headers['x-unidade-id'] as string | undefined;
     const headerTenant = rawHeaderUnitId ? rawHeaderUnitId.trim() : null;
     const jwtTenant = user.unidadeId ? user.unidadeId.trim() : null;
+    const userUnits = (user.unitIds && user.unitIds.length > 0)
+      ? user.unitIds
+      : (jwtTenant ? [jwtTenant] : []);
 
     let contextTenant: string | null = null;
 
     if (headerTenant) {
-      if (isSuperAdmin) {
-        // Administrador tem permissão para chavear o tenant explicitamente via cabeçalho
+      const isAuthorized = isSuperAdmin || userUnits.includes(headerTenant);
+      if (isAuthorized) {
+        // Usuário possui autorização explícita para essa unidade
         contextTenant = headerTenant;
       } else {
-        // Para usuários normais: JWT Tenant e Header Tenant DEVEM coincidir obrigatoriamente
-        if (!jwtTenant || jwtTenant.toLowerCase() !== headerTenant.toLowerCase()) {
-          this.logger.warn(
-            `[Multi-Tenant Divergence] Usuário ${user.id} tentou acessar Header Tenant [${headerTenant}] divergente de seu JWT Tenant [${jwtTenant}]. Operação bloqueada com 403.`,
-          );
-          throw new ForbiddenException(
-            'Violação de Multi-Tenant: Divergência entre JWT Tenant e Header Tenant. Todos os contextos de unidade devem coincidir (403 Forbidden).',
-          );
-        }
-        contextTenant = jwtTenant;
+        this.logger.warn(
+          `[Multi-Tenant Divergence] Usuário ${user.id} tentou acessar Header Tenant [${headerTenant}] fora de suas unidades autorizadas [${userUnits.join(', ')}]. Operação bloqueada com 403.`,
+        );
+        throw new ForbiddenException(
+          'Violação de Multi-Tenant: Usuário não possui autorização para operar na unidade solicitada (403 Forbidden).',
+        );
       }
     } else {
       // Sem cabeçalho explícito: herda estritamente o Tenant Context do JWT
       contextTenant = jwtTenant;
     }
 
-    // Validação de Tripla Coincidência (JWT Tenant, Header Tenant se presente, Context Tenant)
-    if (!isSuperAdmin && headerTenant && (jwtTenant !== headerTenant || contextTenant !== jwtTenant)) {
+    // Validação de segurança: contexto do tenant deve estar autorizado
+    if (!isSuperAdmin && contextTenant && !userUnits.includes(contextTenant)) {
       throw new ForbiddenException(
-        'Violação estrita de isolamento Multi-Tenant: Tenant Context JWT, Header Tenant e Context Tenant divergentes (403 Forbidden).',
+        'Violação estrita de isolamento Multi-Tenant: Tenant Context não autorizado para o usuário (403 Forbidden).',
       );
     }
 

@@ -54,3 +54,44 @@ export function getHoursInTimeZone(date: Date): number {
   const formatter = new Intl.DateTimeFormat('en-US', options);
   return parseInt(formatter.format(date));
 }
+
+/**
+ * Converte com segurança qualquer formato de data (Date, Timestamp Firestore/SIRA,
+ * objeto serializado { seconds, nanoseconds }, string ISO, milissegundos) para uma instância válida de Date.
+ */
+export function toSafeDate(d: any): Date {
+  if (!d) return new Date();
+  if (typeof d?.toDate === 'function') {
+    try {
+      const res = d.toDate();
+      if (res instanceof Date && !isNaN(res.getTime())) return res;
+    } catch {
+      // fallback
+    }
+  }
+  if (d instanceof Date) return isNaN(d.getTime()) ? new Date() : d;
+  if (typeof d?.seconds === 'number') {
+    return new Date(d.seconds * 1000 + (d.nanoseconds || 0) / 1e6);
+  }
+  if (typeof d === 'string' || typeof d === 'number') {
+    const parsed = new Date(d);
+    if (!isNaN(parsed.getTime())) return parsed;
+  }
+  return new Date();
+}
+
+/**
+ * Converte com segurança para milissegundos desde o epoch.
+ */
+export function toSafeMillis(d: any): number {
+  if (!d) return 0;
+  if (typeof d?.toMillis === 'function') {
+    try {
+      return d.toMillis();
+    } catch {
+      // fallback
+    }
+  }
+  return toSafeDate(d).getTime();
+}
+
