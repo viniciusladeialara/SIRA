@@ -120,6 +120,36 @@ Evolução do monólito modular SIRA para o patamar Enterprise 10/10, mantendo 1
 
 ---
 
+## [2.1.0-ENTERPRISE] - 2026-11-08
+
+### 📌 Resumo Executivo
+Refatoração corporativa de Governança de Usuários, Hierarquia em Cascata, Seletor Multi-Unidade com Radix UI, Blindagem RBAC Modular no Backend e Tratamento Universal de Datas em Agendamentos.
+
+### 📂 Detalhamento das Alterações
+
+#### 1. HIERARQUIA EM CASCATA E GOVERNANÇA DE USUÁRIOS
+- **Provisionamento Centralizado**: Apenas um único usuário master ativo (`admin@sira.local` / `super_admin`) com autoridade exclusiva para cadastrar Administradores de Escolas (`ADMIN`).
+- **Blindagem de Perfil**: Administradores de escolas não podem criar, editar nem excluir outros administradores ou o super administrador (bloqueio tanto visual na interface quanto com `403 Forbidden` no backend).
+- **Lotação Automática (Efeito Cascata)**: Usuários criados por um gestor local são obrigatoriamente vinculados à escola do gestor.
+- **Liberação Granular de Módulos**: Usuários chegam com todos os módulos desativados por padrão; o administrador libera individualmente quais telas cada usuário poderá operar (`[x] Turmas`, `[x] Cursos`, `[x] Agendamentos`, etc.).
+
+#### 2. SELETOR MULTI-UNIDADE COM RADIX UI
+- **Substituição de Componente**: Substituição do `<select>` HTML nativo pelo **Radix UI `Select`** estilizado via Portal, eliminando perda de contraste e opções invisíveis no Chromium/Windows em temas escuros.
+- **Identificação Visual**: Exibição do ícone de prédio (`Building`), nome completo da filial, badge com sigla oficial (`CBA`, `CAC`, `ROO`, `SNP`) e indicador distintivo `MULTI-UNIDADE`.
+- **Sincronização em Tempo Real**: Atualização imediata do estado React, persistência no `localStorage`, disparo de evento global na janela e injeção do cabeçalho `X-Unidade-Id`.
+
+#### 3. MULTI-TENANT E BLINDAGEM RBAC NO BACKEND
+- **`TenantInterceptor` Multi-Unidade**: O interceptor agora valida a lista `user.unitIds`. Usuários com múltiplas unidades atribuídas podem alternar entre elas livremente sem receber `403 Forbidden`.
+- **Preservação de Perfis no `UsersService`**: O método `update` protege o vínculo `usuario_perfis`; trocas de unidade ativa ou edição de parâmetros comuns não alteram nem rebaixam perfis RBAC do usuário.
+- **`PermissionsGuard` com Mapeamento Modular**: Valida tanto perfis mestres (`super_admin`, `administrador`) quanto permissões dinâmicas delegadas via `allowedModules` (`user-management` -> `usuarios.*`, `schedules` -> `agendamentos.*`, etc.).
+
+#### 4. TRATAMENTO UNIVERSAL DE DATAS (`toSafeDate` E `toSafeMillis`)
+- **Resolução de Erros de Protótipo**: Implementação centralizada em `apps/web/src/lib/date-utils.ts` que converte de forma segura `Date`, `Timestamp`, strings ISO e objetos serializados `{ seconds, nanoseconds }`.
+- **Componentes Protegidos**: `ScheduleModule.tsx`, `ScheduleCard.tsx`, `ScheduleSummarySidebar.tsx` e `ScheduleCopyWeekModal.tsx`.
+- **Tratamento de Nulos na Pesquisa**: Tratamento com encadeamento opcional e fallbacks em `UserManagementModule.tsx` evitando exceções durante digitação no campo de busca.
+
+---
+
 ### 🛡️ Matriz de Risco e Compatibilidade
 | Componente | Compatibilidade Reversa | Risco Residual | Mitigação Implementada |
 | :--- | :---: | :---: | :--- |

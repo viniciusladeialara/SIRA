@@ -85,9 +85,14 @@ O sistema foi refatorado para um modelo corporativo de alta governança com **Hi
    - Durante o cadastro ou edição, o administrador marca expressamente os módulos que o colaborador terá direito de usar (ex.: apenas Agendamentos e Turmas).
    - Se o colaborador se destacar ou mudar de setor, o gestor pode editar o usuário e marcar módulos adicionais (ex.: Estoque de Uniformes, Ativos, etc.).
 
-5. **Filtro Multi-Unidade no Topo da Página:**
-   - **Usuário com 1 única unidade:** O menu suspenso não é exibido; a unidade do usuário fica exibida de forma fixa e travada (ex.: *SENAI Cáceres*).
-   - **Usuário com mais de 1 unidade (ou SUPER_ADMIN):** O menu suspenso no topo da barra lateral é liberado para permitir alternar entre as unidades autorizadas.
+5. **Seletor de Unidade Ativa no Topo da Barra Lateral (Radix UI Multi-Unidade):**
+   - **Interface Corporativa:** O seletor foi construído com componentes Radix UI acessíveis via Portal, eliminando inconsistências visuais de controles nativos do sistema operacional em modo escuro.
+   - **Exibição Rica:** Cada filial é apresentada com o ícone predial (`Building`), seu nome completo (ex.: *SENAI Cuiabá*, *SENAI Cáceres*) e uma tag destacada com sua sigla oficial (`CBA`, `CAC`, `ROO`, `SNP`).
+   - **Usuário com 1 única unidade:** O menu suspenso permanece travado em visualização fixa com badge da unidade atribuída.
+   - **Usuário Multi-Unidade (ou SUPER_ADMIN):** Recebe o badge distintivo `MULTI-UNIDADE` e pode chavear instantaneamente entre as unidades autorizadas. A troca é propagada imediatamente para o estado React, persistida no `localStorage`, injetada no cabeçalho HTTP `X-Unidade-Id` e salva no perfil do usuário sem redefinir permissões.
+
+6. **Preservação Estrita de Perfis e Permissões:**
+   - A alternância de unidades no seletor do topo **não altera** os perfis RBAC do usuário. O backend protege o vínculo `usuario_perfis` contra rebaixamentos acidentais.
 
 ---
 
@@ -121,27 +126,33 @@ menu.bat
 
 ## 5. Guia de Uso por Perfil de Acesso
 
-### 👑 Perfil: Administrador (`administrador`)
-- **Tela de Controle Master:** Acesso total à barra lateral completa:
-  - Gestão de Usuários (criação, edição de permissões dinâmicas por módulo e exclusão via soft delete).
-  - Parâmetros Globais e Chaveamento de Unidades (Multi-Tenant).
-  - Gerenciamento de Feature Flags ativas via Redis.
-  - Sincronização e Promoção Transacional de Banco de Dados.
-  - Acesso aos relatórios consolidados de todas as unidades.
+### 👑 1. Perfil: Super Administrador (`super_admin`)
+- **Autoridade Máxima do Sistema (Governança Global):**
+  - **Acesso Irrestrito:** Visualiza todas as escolas cadastradas (Cuiabá, Cáceres, Rondonópolis, Sinop) e pode alternar livremente entre elas pelo seletor de unidade ativa.
+  - **Gestão de Administradores:** É o **único perfil com permissão** para cadastrar e editar **Administradores de Escola (`ADMIN`)**.
+  - **Atribuição Multi-Unidade:** Pode definir se o Administrador cuidará de uma escola única ou de um grupo de escolas (ex.: Cuiabá + Cáceres + Rondonópolis).
+  - **Configurações de Infraestrutura:** Acesso exclusivo a Feature Flags dinâmicas no Redis, sincronização duplo-banco e auditoria global de eventos.
 
-### 📋 Perfil: Coordenador (`coordenador`)
-- **Foco Operacional:**
-  - Cadastro e manutenção de Cursos, Turmas, Docentes e Ambientes de sua unidade.
-  - Montagem de grade horária (Agendamentos) com prevenção de choque de horários.
-  - Aprovação de solicitações de permuta docente.
-  - Emissão de relatórios locais de ocupação e carga horária.
-  - *Restrição:* Não visualiza configurações críticas de banco ou outros tenants não autorizados.
+### 🏫 2. Perfil: Administrador da Escola / Gestor Local (`administrador`)
+- **Gestão da Unidade Escolar Atribuída:**
+  - **Escopo Delimitado:** Opera estritamente dentro da sua unidade (ou do conjunto de unidades atribuídas pelo `SUPER_ADMIN`).
+  - **Cadastro de Colaboradores:** Cadastra professores, coordenadores, secretários e equipe técnica com **efeito cascata automático** (os colaboradores são vinculados obrigatoriamente à mesma unidade do gestor).
+  - **Liberação Granular de Módulos:** Concede pontualmente quais telas e recursos cada colaborador poderá acessar (`[x] Turmas`, `[x] Cursos`, `[x] Agendamentos`, etc.).
+  - **Regra de Blindagem:** **NÃO pode criar, editar nem excluir outros Administradores ou Super Administradores.**
 
-### 🎓 Perfil: Professor (`professor`)
-- **Visualização Focal:**
-  - Acesso à grade de horários própria e das turmas designadas.
-  - Botão de solicitação de substituição/troca de horário com outro docente.
-  - *Restrição:* Sem botões de exclusão, edição de infraestrutura ou alteração de usuários.
+### 📋 3. Perfil: Coordenador Pedagógico (`coordenador`)
+- **Operação Acadêmica Local:**
+  - Cadastro e manutenção de Cursos, Turmas, Docentes e Ambientes da sua unidade.
+  - Montagem de grade horária semanal com validação inteligente de choque de salas e horários.
+  - Aprovação de solicitações de permuta docente via Workflow Engine.
+  - Emissão de relatórios locais de ocupação e carga horária semanal.
+  - *Restrição:* Não acessa configurações de governança ou unidades fora de sua lotação.
+
+### 🎓 4. Perfil: Professor (`professor`)
+- **Visualização Focal do Docente:**
+  - Acesso direto à sua grade de horários individual e das turmas designadas.
+  - Painel de solicitação de substituição/troca de horário com outro docente.
+  - *Restrição:* Sem botões de exclusão, alteração de infraestrutura ou gestão de usuários.
 
 ---
 
@@ -151,7 +162,12 @@ menu.bat
 - **Detecção em Tempo Real:** O sistema impede reservas sobrepostas:
   - *Conflito de Sala:* Impede que dois agendamentos no mesmo ambiente compartilhem intervalo temporal.
   - *Conflito de Docente:* Impede que o mesmo professor seja agendado em turmas ou salas distintas no mesmo horário.
+- **Tratamento Seguro de Datas (`toSafeDate` e `toSafeMillis`):** O módulo de agendamentos utiliza helpers de conversão universais capazes de interpretar com segurança objetos Firestore `Timestamp`, serializações `{ seconds, nanoseconds }`, strings ISO do PostgreSQL e instâncias nativas `Date`, prevenindo falhas de execução (`toDate is not a function`).
 - **Event Store:** Cada agendamento gravado emite o evento imutável `AGENDAMENTO_CRIADO` no schema `workflow.eventos`.
+
+### 🛡️ 2. Isolamento Multi-Tenant com Cabeçalho `X-Unidade-Id`
+- O frontend injeta automaticamente a unidade ativa selecionada no cabeçalho HTTP `X-Unidade-Id` de todas as chamadas de API.
+- O `TenantInterceptor` do NestJS valida se o usuário possui permissão para operar naquela unidade (conferindo a lista de filiais autorizadas em seu token JWT ou perfil `super_admin`) e estabelece o contexto seguro isolado via `AsyncLocalStorage`. Tentativas de acesso a filiais não autorizadas são bloqueadas com `403 Forbidden`.
 
 ### 🔄 2. Substituição e Permuta Docente (Workflow Engine)
 - Um docente ou coordenador solicita a troca entre o professor titular e o substituto.
