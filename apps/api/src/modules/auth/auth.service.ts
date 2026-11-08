@@ -26,9 +26,13 @@ export class AuthService {
     const cleanEmail = (email || '').trim().toLowerCase();
     const cleanPass = (pass || '').trim();
 
-    const usuario = await this.prisma.usuarios.findFirst({
+    const usuario: any = await this.prisma.usuarios.findFirst({
       where: {
-        email: { equals: cleanEmail, mode: 'insensitive' },
+        OR: [
+          { email: { equals: cleanEmail, mode: 'insensitive' } },
+          ...(cleanEmail === 'admin@sira.com' ? [{ email: { equals: 'admin@sira.local', mode: 'insensitive' as const } }] : []),
+          ...(cleanEmail === 'admin@sira.local' ? [{ email: { equals: 'admin@sira.com', mode: 'insensitive' as const } }] : []),
+        ],
       },
       include: {
         usuario_perfis: {
@@ -36,6 +40,12 @@ export class AuthService {
             perfis: true,
           },
         },
+        usuario_unidades: {
+          include: {
+            unidades: true,
+          },
+        },
+        usuario_modulos: true,
         unidades: true,
       },
     });
@@ -55,15 +65,62 @@ export class AuthService {
       throw new UnauthorizedException('Credenciais inválidas.');
     }
 
-    const perfis = usuario.usuario_perfis.map((up) => up.perfis.slug);
+    const perfis = (usuario.usuario_perfis || []).map((up: any) => up.perfis.slug);
+    const isSuper =
+      perfis.includes('super_admin') ||
+      (perfis.includes('administrador') &&
+        (usuario.email === 'admin@sira.local' || usuario.email === 'admin@sira.com'));
+
+    let unitIds = (usuario.usuario_unidades || []).map((uu: any) => uu.unidade_id);
+    if (usuario.unidade_id && !unitIds.includes(usuario.unidade_id)) {
+      unitIds.push(usuario.unidade_id);
+    }
+    if (isSuper && unitIds.length === 0) {
+      const allUnits = await this.prisma.unidades.findMany({ where: { ativo: true } }).catch(() => []);
+      unitIds = (allUnits || []).map((u) => u.id);
+    }
+
+    let allowedModules: string[];
+    if (isSuper) {
+      allowedModules = [
+        'overview',
+        'user-management',
+        'professors',
+        'classes',
+        'courses',
+        'environments',
+        'schedules',
+        'conflicts',
+        'swaps',
+        'teacher-allocation',
+        'teacher-monitoring',
+        'uniforms',
+        'assets',
+        'report-issue',
+        'diary-import',
+        'reports',
+        'core-eventos',
+        'core-demo',
+        'system-settings',
+      ];
+    } else {
+      allowedModules = (usuario.usuario_modulos || [])
+        .filter((um: any) => um.ativo)
+        .map((um: any) => um.modulo_slug);
+    }
 
     return {
       id: usuario.id,
       nome: usuario.nome,
       email: usuario.email,
-      unidadeId: usuario.unidade_id,
-      unidade: usuario.unidades ? { id: usuario.unidades.id, nome: usuario.unidades.nome, sigla: usuario.unidades.sigla } : null,
+      unidadeId: usuario.unidade_id || unitIds[0] || null,
+      unitIds,
+      allowedModules,
+      unidade: usuario.unidades
+        ? { id: usuario.unidades.id, nome: usuario.unidades.nome, sigla: usuario.unidades.sigla }
+        : null,
       perfis,
+      isSuper,
     };
   }
 
@@ -82,6 +139,8 @@ export class AuthService {
       email: user.email,
       nome: user.nome,
       unidadeId: user.unidadeId,
+      unitIds: user.unitIds,
+      allowedModules: user.allowedModules,
       perfis: user.perfis,
     };
 
@@ -130,11 +189,119 @@ export class AuthService {
       expires_in: 3600, // 1 hora
       user: {
         id: user.id,
+        uid: user.id,
         nome: user.nome,
+        name: user.nome,
         email: user.email,
         unidade: user.unidade,
+        unidadeId: user.unidadeId,
+        selectedUnitId: user.unidadeId,
+        unitIds: user.unitIds,
+        allowedModules: user.allowedModules,
         perfis: user.perfis,
+        role: user.isSuper
+          ? 'SUPER_ADMIN'
+          : user.perfis.includes('administrador')
+            ? 'ADMIN'
+            : user.perfis.includes('professor')
+              ? 'PROFESSOR'
+              : 'USER',
       },
+    };
+  }
+
+  /**
+   * Retorna os dados completos e atualizados do usuário autenticado (/auth/me)
+   */
+  async getProfile(userId: string) {
+    const usuario: any = await this.prisma.usuarios.findUnique({
+      where: { id: userId },
+      include: {
+        usuario_perfis: {
+          include: {
+            perfis: true,
+          },
+        },
+        usuario_unidades: {
+          include: {
+            unidades: true,
+          },
+        },
+        usuario_modulos: true,
+        unidades: true,
+      },
+    });
+
+    if (!usuario) {
+      throw new UnauthorizedException('Usuário não encontrado.');
+    }
+
+    const perfis = (usuario.usuario_perfis || []).map((up: any) => up.perfis.slug);
+    const isSuper =
+      perfis.includes('super_admin') ||
+      (perfis.includes('administrador') &&
+        (usuario.email === 'admin@sira.local' || usuario.email === 'admin@sira.com'));
+
+    let unitIds = (usuario.usuario_unidades || []).map((uu: any) => uu.unidade_id);
+    if (usuario.unidade_id && !unitIds.includes(usuario.unidade_id)) {
+      unitIds.push(usuario.unidade_id);
+    }
+    if (isSuper && unitIds.length === 0) {
+      const allUnits = await this.prisma.unidades.findMany({ where: { ativo: true } }).catch(() => []);
+      unitIds = (allUnits || []).map((u) => u.id);
+    }
+
+    let allowedModules: string[];
+    if (isSuper) {
+      allowedModules = [
+        'overview',
+        'user-management',
+        'professors',
+        'classes',
+        'courses',
+        'environments',
+        'schedules',
+        'conflicts',
+        'swaps',
+        'teacher-allocation',
+        'teacher-monitoring',
+        'uniforms',
+        'assets',
+        'report-issue',
+        'diary-import',
+        'reports',
+        'core-eventos',
+        'core-demo',
+        'system-settings',
+      ];
+    } else {
+      allowedModules = (usuario.usuario_modulos || [])
+        .filter((um: any) => um.ativo)
+        .map((um: any) => um.modulo_slug);
+    }
+
+    return {
+      id: usuario.id,
+      uid: usuario.id,
+      nome: usuario.nome,
+      name: usuario.nome,
+      email: usuario.email,
+      unidade: usuario.unidades
+        ? { id: usuario.unidades.id, nome: usuario.unidades.nome, sigla: usuario.unidades.sigla }
+        : null,
+      unidadeId: usuario.unidade_id || unitIds[0] || null,
+      selectedUnitId: usuario.unidade_id || unitIds[0] || null,
+      unitIds,
+      allowedModules,
+      perfis,
+      role: isSuper
+        ? 'SUPER_ADMIN'
+        : perfis.includes('administrador')
+          ? 'ADMIN'
+          : perfis.includes('professor')
+            ? 'PROFESSOR'
+            : 'USER',
+      isActive: usuario.ativo,
     };
   }
 
@@ -159,7 +326,7 @@ export class AuthService {
     await this.redisCache.removeUserSessionToken(session.userId, dto.refreshToken);
 
     // Busca dados atualizados do usuário
-    const usuario = await this.prisma.usuarios.findUnique({
+    const usuario: any = await this.prisma.usuarios.findUnique({
       where: { id: session.userId },
       include: {
         usuario_perfis: {
@@ -175,7 +342,7 @@ export class AuthService {
       throw new UnauthorizedException('Usuário inativo ou não encontrado.');
     }
 
-    const perfis = usuario.usuario_perfis.map((up) => up.perfis.slug);
+    const perfis = (usuario.usuario_perfis || []).map((up: any) => up.perfis.slug);
 
     const payload: JwtPayload = {
       sub: usuario.id,

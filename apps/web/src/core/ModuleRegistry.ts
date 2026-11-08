@@ -92,7 +92,7 @@ class ModuleRegistryClass {
     const all = this.getAllModules();
 
     return all.filter((module) => {
-      // 1. Módulos restritos ao Super Admin
+      // 1. Módulos restritos ao Super Admin (Governança, Diagnóstico e Configurações Globais)
       if (module.superAdminOnly && !isSuperAdmin) {
         return false;
       }
@@ -102,27 +102,36 @@ class ModuleRegistryClass {
         return false;
       }
 
-      // 3. Módulos liberados explicitamente para este usuário no banco (override dinâmico)
-      if (userData?.allowedModules && userData.allowedModules.includes(module.id)) {
-        return true;
-      }
-
-      // 4. Módulos com restrição estrita de perfil (ex: apenas PROFESSOR)
-      // Não fazem sentido para outros perfis e não devem aparecer nem para o Super Admin
+      // 3. Módulos com restrição estrita de perfil (ex: apenas PROFESSOR para a Minha Semana)
       if (module.exactRolesOnly) {
         return userRole ? module.defaultRoles.includes(userRole) : false;
       }
 
-      // 5. Se for Super Admin, tem acesso aos demais módulos administrativos/gerais não bloqueados
+      // 4. O Super Administrador possui acesso total a todos os módulos
       if (isSuperAdmin) {
         return true;
       }
 
-      // 5. Verificação padrão baseada no perfil (Role)
-      if (userRole && module.defaultRoles.includes(userRole)) {
+      // 5. Módulos liberados explicitamente para este usuário (ativação granular)
+      if (userData?.allowedModules && userData.allowedModules.includes(module.id)) {
         return true;
       }
 
+      // 6. Administrador Escolar (ADMIN): tem acesso à gestão de usuários e visão geral da unidade
+      if (userRole === UserRole.ADMIN) {
+        if (module.id === 'user-management' || module.id === 'overview') {
+          return true;
+        }
+        // Se o ADMIN tiver allowedModules definidos, respeita estritamente
+        if (userData?.allowedModules && userData.allowedModules.length > 0) {
+          return userData.allowedModules.includes(module.id);
+        }
+        // Se for admin sem restrição explícita, pode acessar os módulos educacionais da sua escola
+        return module.defaultRoles.includes(UserRole.ADMIN);
+      }
+
+      // 7. Usuários comuns (USER): POR PADRÃO TODOS OS MÓDULOS VÊM DESATIVADOS
+      // Somente os módulos explicitamente liberados via allowedModules são exibidos
       return false;
     });
   }

@@ -36,6 +36,11 @@ export const httpsCallable = (functions: any, name: string) => {
         }
         return { data: { success: true } };
       }
+
+      if (name === 'createUser') {
+        const created = await apiService.createUser(data);
+        return { data: { success: true, status: 'success', uid: created?.id, ...created } };
+      }
     } catch (err: any) {
       console.warn(`[SIRA Functions Adapter] Erro na função "${name}":`, err);
       throw err;

@@ -211,17 +211,20 @@ const Dashboard: React.FC = () => {
             <select
               value={selectedUnitId}
               onChange={(e) => handleUnitChange(e.target.value)}
-              className="bg-gray-800 text-white border border-gray-700 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold cursor-pointer w-full transition-all duration-200 hover:bg-gray-750"
+              className="bg-gray-800 text-white border border-gray-700 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold cursor-pointer w-full transition-all duration-200"
             >
-              {availableUnits.map((u) => (
-                <option key={u.id} value={u.id} className="bg-gray-900 text-white">
-                  {u.nome || u.name || u.sigla || "Unidade SENAI"}
-                </option>
-              ))}
+              {availableUnits.map((u) => {
+                const label = u.nome || u.name || (u.sigla ? `SENAI ${u.sigla}` : `Unidade (${u.id?.slice(0, 8)})`);
+                return (
+                  <option key={u.id} value={u.id} className="bg-gray-900 text-white py-1.5 font-medium">
+                    {label}
+                  </option>
+                );
+              })}
             </select>
           ) : (
-            <div className="font-bold text-base text-white py-1">
-              {units.find(u => u.id === selectedUnitId)?.nome || units.find(u => u.id === selectedUnitId)?.name || availableUnits[0]?.nome || availableUnits[0]?.name || "SENAI Cuiabá"}
+            <div className="font-bold text-sm text-blue-400 bg-gray-800/80 px-3 py-2 rounded-lg border border-gray-700/60">
+              {units.find(u => u.id === selectedUnitId)?.nome || units.find(u => u.id === selectedUnitId)?.name || availableUnits[0]?.nome || availableUnits[0]?.name || "SENAI Cáceres"}
             </div>
           )}
         </div>

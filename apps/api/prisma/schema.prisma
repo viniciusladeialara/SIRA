@@ -110,23 +110,24 @@ model permissoes {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model unidades {
-  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  codigo        String?         @unique @db.VarChar(50)
-  nome          String          @db.VarChar(255)
-  sigla         String?         @db.VarChar(50)
-  cidade        String?         @db.VarChar(100)
-  estado        String?         @default("MT") @db.VarChar(2)
-  ativo         Boolean         @default(true)
-  criado_em     DateTime        @default(now()) @db.Timestamptz(6)
-  atualizado_em DateTime        @default(now()) @db.Timestamptz(6)
-  ambientes     ambientes[]
-  cursos        cursos[]
-  docentes      docentes[]
-  turmas        turmas[]
-  usuarios      usuarios[]
-  agendamentos  agendamentos[]
-  feriados      feriados[]
-  substituicoes substituicoes[]
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  codigo           String?            @unique @db.VarChar(50)
+  nome             String             @db.VarChar(255)
+  sigla            String?            @db.VarChar(50)
+  cidade           String?            @db.VarChar(100)
+  estado           String?            @default("MT") @db.VarChar(2)
+  ativo            Boolean            @default(true)
+  criado_em        DateTime           @default(now()) @db.Timestamptz(6)
+  atualizado_em    DateTime           @default(now()) @db.Timestamptz(6)
+  ambientes        ambientes[]
+  cursos           cursos[]
+  docentes         docentes[]
+  turmas           turmas[]
+  usuarios         usuarios[]
+  agendamentos     agendamentos[]
+  feriados         feriados[]
+  substituicoes    substituicoes[]
+  usuario_unidades usuario_unidades[]
 
   @@index([ativo], map: "idx_unidades_ativo")
   @@index([cidade], map: "idx_unidades_cidade")
@@ -144,23 +145,50 @@ model usuario_perfis {
   @@schema("core")
 }
 
+model usuario_unidades {
+  usuario_id String   @db.Uuid
+  unidade_id String   @db.Uuid
+  criado_em  DateTime @default(now()) @db.Timestamptz(6)
+  usuarios   usuarios @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  unidades   unidades @relation(fields: [unidade_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([usuario_id, unidade_id])
+  @@index([unidade_id], map: "idx_usuario_unidades_unidade")
+  @@schema("core")
+}
+
+model usuario_modulos {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usuario_id  String   @db.Uuid
+  modulo_slug String   @db.VarChar(100)
+  ativo       Boolean  @default(true)
+  criado_em   DateTime @default(now()) @db.Timestamptz(6)
+  usuarios    usuarios @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([usuario_id, modulo_slug], map: "uq_usuario_modulos_slug")
+  @@index([usuario_id], map: "idx_usuario_modulos_usuario")
+  @@schema("core")
+}
+
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model usuarios {
-  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  unidade_id     String?          @db.Uuid
-  nome           String           @db.VarChar(255)
-  email          String           @unique @db.VarChar(255)
-  senha_hash     String           @db.VarChar(255)
-  ativo          Boolean          @default(true)
-  excluido_em    DateTime?        @db.Timestamptz(6)
-  excluido_por   String?          @db.Uuid
-  criado_em      DateTime         @default(now()) @db.Timestamptz(6)
-  atualizado_em  DateTime         @default(now()) @db.Timestamptz(6)
-  docentes       docentes[]
-  usuario_perfis usuario_perfis[]
-  unidades       unidades?        @relation(fields: [unidade_id], references: [id], onUpdate: NoAction)
-  agendamentos   agendamentos[]
-  substituicoes  substituicoes[]
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  unidade_id       String?            @db.Uuid
+  nome             String             @db.VarChar(255)
+  email            String             @unique @db.VarChar(255)
+  senha_hash       String             @db.VarChar(255)
+  ativo            Boolean            @default(true)
+  excluido_em      DateTime?          @db.Timestamptz(6)
+  excluido_por     String?            @db.Uuid
+  criado_em        DateTime           @default(now()) @db.Timestamptz(6)
+  atualizado_em    DateTime           @default(now()) @db.Timestamptz(6)
+  docentes         docentes[]
+  usuario_perfis   usuario_perfis[]
+  usuario_unidades usuario_unidades[]
+  usuario_modulos  usuario_modulos[]
+  unidades         unidades?          @relation(fields: [unidade_id], references: [id], onUpdate: NoAction)
+  agendamentos     agendamentos[]
+  substituicoes    substituicoes[]
 
   @@index([ativo], map: "idx_usuarios_ativo")
   @@index([email], map: "idx_usuarios_email")

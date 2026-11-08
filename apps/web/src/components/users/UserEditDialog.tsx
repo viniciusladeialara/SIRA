@@ -77,54 +77,54 @@ export function UserEditDialog({
                 />
               </div>
 
+              {/* Unidades Permitidas */}
               {units && units.length > 0 && (
                 <div className="space-y-2 border-t pt-4">
                   <div className="flex justify-between items-center">
-                    <Label>
-                      {editingUser.role === UserRole.USER ? 'Unidade de Lotação (Única)' : 'Unidades SENAI Permitidas'}
+                    <Label className="font-semibold text-xs text-slate-800 dark:text-slate-200">
+                      {isSuperAdmin ? 'Unidades SENAI Permitidas (Multi-Unidade)' : 'Unidade de Lotação'}
                     </Label>
-                    {editingUser.role === UserRole.USER && (
-                      <span className="text-[10px] text-muted-foreground font-semibold">Operacional pertence a 1 unidade</span>
+                    {!isSuperAdmin && (
+                      <span className="text-[10px] text-muted-foreground font-semibold">
+                        Lotação fixa
+                      </span>
                     )}
                   </div>
-                  <div className="flex flex-col gap-2 bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
-                    {units.map(u => {
-                      const isUserRole = editingUser.role === UserRole.USER;
-                      const isChecked = editingUser.unitIds?.includes(u.id) || false;
-                      return (
-                        <label key={u.id} className="flex items-center gap-2.5 cursor-pointer hover:bg-slate-100/50 p-1.5 rounded transition-all">
-                          <input
-                            type={isUserRole ? "radio" : "checkbox"}
-                            name="edit-user-units"
-                            checked={isChecked}
-                            onChange={(e) => {
-                              if (isUserRole) {
-                                setEditingUser({ 
-                                  ...editingUser, 
-                                  unitIds: [u.id],
-                                  selectedUnitId: u.id
-                                });
-                              } else {
+                  {isSuperAdmin ? (
+                    <div className="flex flex-col gap-2 bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+                      {units.map((u) => {
+                        const isChecked = editingUser.unitIds?.includes(u.id) || false;
+                        return (
+                          <label key={u.id} className="flex items-center gap-2.5 cursor-pointer hover:bg-slate-100/50 p-1.5 rounded transition-all">
+                            <input
+                              type="checkbox"
+                              name="edit-user-units"
+                              checked={isChecked}
+                              onChange={(e) => {
                                 const current = editingUser.unitIds || [];
                                 const updated = e.target.checked
                                   ? [...current, u.id]
                                   : current.filter((id: string) => id !== u.id);
-                                setEditingUser({ 
-                                  ...editingUser, 
+                                setEditingUser({
+                                  ...editingUser,
                                   unitIds: updated,
                                   selectedUnitId: editingUser.selectedUnitId && updated.includes(editingUser.selectedUnitId)
                                     ? editingUser.selectedUnitId
-                                    : updated[0] || u.id
+                                    : updated[0] || u.id,
                                 });
-                              }
-                            }}
-                            className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer h-4 w-4"
-                          />
-                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{u.name}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
+                              }}
+                              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer h-4 w-4"
+                            />
+                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{u.name}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                      {units.find((u) => u.id === editingUser.selectedUnitId || u.id === editingUser.unitIds?.[0])?.name || "Unidade Vinculada"}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -216,47 +216,39 @@ export function UserEditDialog({
                 schools={schools}
               />
 
-              {/* Liberação Granular de Módulos (Core Engine) */}
+              {/* Liberação de Módulos (Core Engine) */}
               <div className="space-y-2 border-t pt-3">
                 <div className="flex items-center gap-1.5">
                   <Shield className="h-4 w-4 text-blue-600" />
-                  <Label className="font-bold text-xs">Liberação Dinâmica de Módulos (Core)</Label>
+                  <Label className="font-bold text-xs">Liberação de Módulos de Atuação</Label>
                 </div>
                 <p className="text-[11px] text-muted-foreground">
-                  Conceda acesso a módulos adicionais para este usuário além das permissões padrão do perfil:
+                  Ative ou desative o acesso do usuário a cada módulo do sistema:
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 bg-slate-50 dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 max-h-44 overflow-y-auto">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 bg-slate-50 dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 max-h-48 overflow-y-auto">
                   {ModuleRegistry.getAllModules()
-                    .filter(m => !m.superAdminOnly && (!m.exactRolesOnly || m.defaultRoles.includes(editingUser.role)))
-                    .map(mod => {
-                      const isGrantedByRole = mod.defaultRoles.includes(editingUser.role);
-                      const isExplicitlyAllowed = editingUser.allowedModules?.includes(mod.id);
-                      const isChecked = isGrantedByRole || isExplicitlyAllowed;
+                    .filter((m) => !m.superAdminOnly)
+                    .map((mod) => {
+                      const isChecked = editingUser.allowedModules?.includes(mod.id) || false;
 
                       return (
                         <label 
                           key={mod.id} 
-                          className={`flex items-center gap-2 p-1.5 rounded text-xs transition-all ${
-                            isGrantedByRole 
-                              ? 'opacity-65 bg-slate-100/50 dark:bg-slate-800/40 cursor-default' 
-                              : 'hover:bg-blue-50/50 dark:hover:bg-slate-800 cursor-pointer'
-                          }`}
+                          className="flex items-center gap-2 p-1.5 rounded text-xs transition-all hover:bg-blue-50/50 dark:hover:bg-slate-800 cursor-pointer"
                         >
                           <input
                             type="checkbox"
-                            disabled={isGrantedByRole}
                             checked={isChecked}
                             onChange={(e) => {
                               const current = editingUser.allowedModules || [];
                               const updated = e.target.checked
                                 ? [...current, mod.id]
-                                : current.filter(id => id !== mod.id);
+                                : current.filter((id: string) => id !== mod.id);
                               setEditingUser({ ...editingUser, allowedModules: updated });
                             }}
-                            className="rounded border-slate-300 text-blue-600 h-3.5 w-3.5 disabled:opacity-50"
+                            className="rounded border-slate-300 text-blue-600 h-3.5 w-3.5 cursor-pointer"
                           />
                           <span className="truncate text-slate-700 dark:text-slate-300">{mod.title}</span>
-                          {isGrantedByRole && <span className="text-[10px] text-slate-400 font-mono ml-auto">(perfil)</span>}
                         </label>
                       );
                     })}

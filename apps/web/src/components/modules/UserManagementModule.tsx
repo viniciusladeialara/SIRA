@@ -34,7 +34,16 @@ export function UserManagementModule() {
   const { userRole, isUserAdmin, isUserSuperAdmin, canCreate, canEdit, canDelete, userData } = usePermissions();
   const selectedUnitId = userData?.selectedUnitId || "caceres";
   const [users, setUsers] = useState<(UserWithRole & { id: string })[]>([]);
-  const [newUser, setNewUser] = useState({ email: '', name: '', password: '', role: UserRole.USER, escolaId: '', teacherId: '', unitIds: ['caceres'] as string[] });
+  const [newUser, setNewUser] = useState({
+    email: '',
+    name: '',
+    password: '',
+    role: UserRole.USER,
+    escolaId: '',
+    teacherId: '',
+    unitIds: ['a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12'] as string[],
+    allowedModules: [] as string[],
+  });
   const [units, setUnits] = useState<{id: string, name: string}[]>([]);
   const isSuperAdmin = isUserSuperAdmin();
 
@@ -69,10 +78,19 @@ export function UserManagementModule() {
         ...doc.data()
       })) as (UserWithRole & { id: string })[];
 
-      const usersData = allUsers.filter(user => 
-        user.role !== UserRole.PROFESSOR && 
-        user.email !== 'viniciusladeialara@gmail.com'
-      );
+      const usersData = allUsers.filter(user => {
+        // Regra: Administrador escolar não vê o Super Admin
+        if (!isSuperAdmin) {
+          if (user.role === UserRole.SUPER_ADMIN || user.email === 'admin@sira.local' || user.email === 'admin@sira.com') {
+            return false;
+          }
+          // Filtra pela unidade da escola (efeito cascata)
+          const userUnits = user.unitIds && user.unitIds.length > 0 ? user.unitIds : [user.selectedUnitId || (user as any).unidadeId];
+          const actorUnits = userData?.unitIds && userData.unitIds.length > 0 ? userData.unitIds : [selectedUnitId];
+          return userUnits.some(uId => actorUnits.includes(uId));
+        }
+        return true;
+      });
 
       usersData.sort((a, b) => {
         const getTimestamp = (val: any) => {
@@ -102,11 +120,17 @@ export function UserManagementModule() {
         ...doc.data()
       })) as (UserWithRole & { id: string })[];
       
-      // Filter out PROFESSOR role and the super admin to prevent modification
-      const usersData = allUsers.filter(user => 
-        user.role !== UserRole.PROFESSOR && 
-        user.email !== 'viniciusladeialara@gmail.com'
-      );
+      const usersData = allUsers.filter(user => {
+        if (!isSuperAdmin) {
+          if (user.role === UserRole.SUPER_ADMIN || user.email === 'admin@sira.local' || user.email === 'admin@sira.com') {
+            return false;
+          }
+          const userUnits = user.unitIds && user.unitIds.length > 0 ? user.unitIds : [user.selectedUnitId || (user as any).unidadeId];
+          const actorUnits = userData?.unitIds && userData.unitIds.length > 0 ? userData.unitIds : [selectedUnitId];
+          return userUnits.some(uId => actorUnits.includes(uId));
+        }
+        return true;
+      });
       
       usersData.sort((a, b) => {
         const getTimestamp = (val: any) => {
@@ -122,9 +146,9 @@ export function UserManagementModule() {
       toast({ title: "Erro", description: "Erro ao carregar lista de usuários.", variant: "destructive" });
     });
     return unsubscribe;
-  }, [isUserAdmin, toast]);
+  }, [isUserAdmin, isSuperAdmin, selectedUnitId, userData, toast]);
 
-  // Carregar Escolas, Professores e Unidades (Sob demanda com getDocs para economia de custos)
+  // Carregar Escolas, Professores e Unidades
   useEffect(() => {
     if (!isUserAdmin()) return;
 
@@ -137,7 +161,7 @@ export function UserManagementModule() {
         ]);
         setSchools(schoolsSnap.docs.map(doc => ({ id: doc.id, name: doc.data().name })));
         setTeachers(teachersSnap.docs.map(doc => ({ id: doc.id, name: doc.data().name })));
-        setUnits(unitsSnap.docs.map(d => ({ id: d.id, name: d.data().name })));
+        setUnits(unitsSnap.docs.map(d => ({ id: d.id, name: d.data().nome || d.data().name || 'Unidade SENAI' })));
       } catch (err) {
         console.error("Erro ao carregar metadados em UserManagementModule:", err);
       }
@@ -146,14 +170,11 @@ export function UserManagementModule() {
     loadMetadata();
   }, [isUserAdmin]);
 
-
   const getAvailableRoles = (currentEditingRole?: UserRole) => {
-    if (isSuperAdmin) return [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.USER, UserRole.PARTNER_SCHOOL];
+    if (isSuperAdmin) return [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.USER, UserRole.PROFESSOR, UserRole.PARTNER_SCHOOL];
     if (userRole === UserRole.ADMIN) {
-      if (currentEditingRole === UserRole.ADMIN) {
-        return [UserRole.ADMIN, UserRole.USER, UserRole.PARTNER_SCHOOL];
-      }
-      return [UserRole.USER, UserRole.PARTNER_SCHOOL];
+      // REGRA: Admin de escola NÃO cadastra nem edita admin/super_admin
+      return [UserRole.USER, UserRole.PROFESSOR, UserRole.PARTNER_SCHOOL];
     }
     return [];
   };
@@ -198,54 +219,60 @@ export function UserManagementModule() {
     }
     setIsCreating(true);
     try {
-      const createUserFunction = httpsCallable<any, CreateUserResponse>(functions, 'createUser');
       const scope = getScopeFromData(newUser);
       const password = shouldInvite ? Math.random().toString(36).slice(-10) + 'A1!' : newUser.password;
 
-      const createUserResult = await createUserFunction({
+      // Efeito cascata: Admin de escola sempre vincula à sua própria unidade
+      const targetUnits = isSuperAdmin
+        ? (newUser.unitIds && newUser.unitIds.length > 0 ? newUser.unitIds : [selectedUnitId])
+        : [selectedUnitId];
+
+      const payload = {
         email: newUser.email,
+        nome: newUser.name,
         name: newUser.name,
         password: password,
+        senha: password,
         role: newUser.role,
+        perfis: [newUser.role.toLowerCase()],
+        unidadeId: targetUnits[0],
+        selectedUnitId: targetUnits[0],
+        unitIds: targetUnits,
+        allowedModules: newUser.allowedModules || [],
+        modulos: newUser.allowedModules || [],
         escolaId: newUser.escolaId || null,
         teacherId: newUser.teacherId || null,
         scope,
         invite: shouldInvite,
         status: shouldInvite ? UserStatus.INVITED : UserStatus.ACTIVE,
-        unitIds: newUser.unitIds || ['caceres'],
-        selectedUnitId: newUser.unitIds?.[0] || 'caceres'
+      };
+
+      await apiService.createUser(payload);
+
+      await logAction(
+        shouldInvite ? AuditAction.USER_INVITE_SENT : AuditAction.CREATE_USER,
+        currentUser,
+        shouldInvite ? `Enviou convite para ${newUser.email}` : `Criou novo usuário: ${newUser.email}`,
+        { newUser: { ...newUser, password: '[REDACTED]', scope, status: shouldInvite ? 'invited' : 'active' } }
+      );
+      toast({ title: "Sucesso", description: `Usuário ${newUser.name} criado com sucesso!` });
+      setNewUser({
+        email: '',
+        name: '',
+        password: '',
+        role: UserRole.USER,
+        escolaId: '',
+        teacherId: '',
+        unitIds: isSuperAdmin ? [selectedUnitId] : [selectedUnitId],
+        allowedModules: [],
       });
-
-      const isSuccess = createUserResult.data?.success || createUserResult.data?.status === 'success';
-      const createdUid = createUserResult.data?.uid;
-
-      if (isSuccess) {
-        if (createdUid) {
-          try {
-            await setDoc(doc(db, 'users', createdUid), {
-              unitIds: newUser.unitIds || ['caceres'],
-              selectedUnitId: newUser.unitIds?.[0] || 'caceres'
-            }, { merge: true });
-          } catch (e) {
-            console.warn("Aviso ao salvar unidades do usuário no Firestore:", e);
-          }
-        }
-
-        await logAction(
-          shouldInvite ? AuditAction.USER_INVITE_SENT : AuditAction.CREATE_USER,
-          currentUser,
-          shouldInvite ? `Enviou convite para ${newUser.email}` : `Criou novo usuário: ${newUser.email}`,
-          { newUser: { ...newUser, password: '[REDACTED]', scope, status: shouldInvite ? 'invited' : 'active' } }
-        );
-        toast({ title: "Sucesso", description: `Usuário ${newUser.name} criado com sucesso!` });
-        setNewUser({ email: '', name: '', password: '', role: UserRole.USER, escolaId: '', teacherId: '', unitIds: ['caceres'] as string[] });
-        setShouldInvite(false);
-        setIsCreateDialogOpen(false);
-        await handleManualRefresh();
-      }
+      setShouldInvite(false);
+      setIsCreateDialogOpen(false);
+      await handleManualRefresh();
     } catch (error: any) {
       console.error('Erro ao criar usuário:', error);
-      toast({ title: "Erro", description: "Erro ao criar usuário.", variant: "destructive" });
+      const msg = error?.response?.data?.message || error?.message || "Erro ao criar usuário.";
+      toast({ title: "Erro", description: msg, variant: "destructive" });
     } finally {
       setIsCreating(false);
     }
@@ -261,49 +288,35 @@ export function UserManagementModule() {
 
     setIsUpdating(true);
     try {
-      const userRef = doc(db, 'users', editingUser.id!);
-      const oldData = users.find(u => u.id === editingUser.id);
-      const newScope = getScopeFromData(editingUser);
+      const targetUnits = isSuperAdmin
+        ? (editingUser.unitIds && editingUser.unitIds.length > 0 ? editingUser.unitIds : [editingUser.selectedUnitId || selectedUnitId])
+        : [editingUser.selectedUnitId || selectedUnitId];
 
-      await updateDoc(userRef, {
+      const payload = {
+        nome: editingUser.name,
         name: editingUser.name,
+        email: editingUser.email,
         role: editingUser.role,
+        perfis: [editingUser.role.toLowerCase()],
+        ativo: editingUser.isActive,
         isActive: editingUser.isActive,
-        escolaId: editingUser.escolaId || null,
-        teacherId: editingUser.teacherId || null,
-        scope: newScope,
-        unitIds: editingUser.unitIds || ['caceres'],
-        selectedUnitId: editingUser.selectedUnitId || editingUser.unitIds?.[0] || 'caceres',
-        allowedModules: editingUser.allowedModules || []
-      });
+        unidadeId: targetUnits[0],
+        selectedUnitId: targetUnits[0],
+        unitIds: targetUnits,
+        allowedModules: editingUser.allowedModules || [],
+        modulos: editingUser.allowedModules || [],
+      };
 
-      if (oldData?.role !== editingUser.role) {
-        await logAction(AuditAction.USER_ROLE_CHANGED, currentUser, `Alterou perfil de ${editingUser.email}`, { userId: editingUser.id, oldRole: oldData?.role, newRole: editingUser.role });
-      }
+      await apiService.updateUser(editingUser.id, payload);
 
-      // Auditoria imutável para concessão/revogação dinâmica de módulos (PRD Enterprise)
-      const oldAllowed = oldData?.allowedModules || [];
-      const newAllowed = editingUser.allowedModules || [];
-      const isAllowedChanged = oldAllowed.length !== newAllowed.length || !oldAllowed.every(m => newAllowed.includes(m));
-      if (isAllowedChanged) {
-        await logAction(
-          AuditAction.USER_MODULE_PERMISSION_CHANGED,
-          currentUser,
-          `Alterou concessão de módulos dinâmicos para ${editingUser.email}`,
-          {
-            userId: editingUser.id,
-            email: editingUser.email,
-            previousModules: oldAllowed,
-            newModules: newAllowed
-          }
-        );
-      }
       toast({ title: "Sucesso", description: "Usuário atualizado com sucesso." });
       setEditingUser(null);
       setIsEditDialogOpen(false);
-    } catch (error) {
+      await handleManualRefresh();
+    } catch (error: any) {
       console.error('Erro ao atualizar usuário:', error);
-      toast({ title: "Erro", description: "Erro ao atualizar usuário.", variant: "destructive" });
+      const msg = error?.response?.data?.message || error?.message || "Erro ao atualizar usuário.";
+      toast({ title: "Erro", description: msg, variant: "destructive" });
     } finally {
       setIsUpdating(false);
     }
@@ -320,12 +333,14 @@ export function UserManagementModule() {
 
     if (!window.confirm(`Tem certeza que deseja excluir o usuário ${userEmail}?`)) return;
     try {
-      await deleteDoc(doc(db, 'users', userId));
+      await apiService.deleteUser(userId);
       await logAction(AuditAction.DELETE_USER, currentUser, `Usuário ${userEmail} excluído`, { userId, userEmail });
-      toast({ title: "Sucesso", description: "Usuário excluído com sucesso." });
-    } catch (error) {
+      toast({ title: "Sucesso", description: "Usuário desativado com sucesso." });
+      await handleManualRefresh();
+    } catch (error: any) {
       console.error('Erro ao excluir usuário:', error);
-      toast({ title: "Erro", description: "Erro ao excluir usuário.", variant: "destructive" });
+      const msg = error?.response?.data?.message || error?.message || "Erro ao excluir usuário.";
+      toast({ title: "Erro", description: msg, variant: "destructive" });
     }
   };
 

@@ -24,32 +24,42 @@ export function usePermissions() {
 
     // Mapeamento imediato a partir do SIRA SQL / PostgreSQL
     const isSuper =
-      currentUser.role === 'administrador' ||
-      currentUser.perfis?.includes('administrador') ||
+      currentUser.role === 'super_admin' ||
+      currentUser.role === 'SUPER_ADMIN' ||
+      currentUser.perfis?.includes('super_admin') ||
       currentUser.email === 'admin@sira.local' ||
+      currentUser.email === 'admin@sira.com' ||
       currentUser.email === 'viniciusladeialara@gmail.com';
     const mappedRole = isSuper
       ? UserRole.SUPER_ADMIN
-      : currentUser.role === 'professor'
-        ? UserRole.PROFESSOR
-        : currentUser.role === 'gestor' || currentUser.role === 'coordenador'
-          ? UserRole.ADMIN
-          : UserRole.USER;
+      : (currentUser.role === 'ADMIN' || currentUser.role === 'administrador' || currentUser.perfis?.includes('administrador'))
+        ? UserRole.ADMIN
+        : (currentUser.role === 'PROFESSOR' || currentUser.role === 'professor' || currentUser.perfis?.includes('professor'))
+          ? UserRole.PROFESSOR
+          : (currentUser.role === 'PARTNER_SCHOOL' || currentUser.role === 'consulta')
+            ? UserRole.PARTNER_SCHOOL
+            : UserRole.USER;
 
     const unitId =
       currentUser.unidadeId ||
+      currentUser.selectedUnitId ||
       localStorage.getItem('selected_unit_id') ||
       'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
 
+    const userUnitIds =
+      currentUser.unitIds && currentUser.unitIds.length > 0
+        ? currentUser.unitIds
+        : [unitId];
+
     const mappedUserData: UserWithRole = {
-      uid: currentUser.uid,
+      uid: currentUser.uid || currentUser.id,
       email: currentUser.email,
-      name: currentUser.displayName || currentUser.name || 'Administrador SIRA',
+      name: currentUser.displayName || currentUser.name || currentUser.nome || 'Usuário SIRA',
       role: mappedRole,
       isActive: true,
       status: UserStatus.ACTIVE,
       selectedUnitId: unitId,
-      unitIds: [unitId],
+      unitIds: userUnitIds,
       allowedModules: currentUser.allowedModules || [],
       blockedModules: currentUser.blockedModules || [],
     };

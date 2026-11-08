@@ -5,9 +5,10 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Crown, User, UserCheck, Shield } from "lucide-react";
+import { Plus, Crown, User, UserCheck, Shield, Lock } from "lucide-react";
 import { UserRole, UserScope } from "@/lib/UserRoles";
 import { UserPermissionSummary } from "./UserPermissionSummary";
+import { ModuleRegistry } from "@/core/ModuleRegistry";
 
 interface UserCreateDialogProps {
   isOpen: boolean;
@@ -52,11 +53,11 @@ export function UserCreateDialog({
           Novo(a) Usuário(a)
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Criar Novo(a) Usuário(a)</DialogTitle>
           <DialogDescription>
-            Adicione um novo usuário ao sistema com suas permissões.
+            Adicione um novo usuário ao sistema com perfil, unidade e módulos específicos de atuação.
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
@@ -103,36 +104,42 @@ export function UserCreateDialog({
                 </div>
               )}
 
-              {units && units.length > 0 && (
-                <div className="space-y-2 border-t pt-4">
-                  <div className="flex justify-between items-center">
-                    <Label>
-                      {newUser.role === UserRole.USER ? 'Unidade de Lotação (Única)' : 'Unidades SENAI Permitidas'}
-                    </Label>
-                    {newUser.role === UserRole.USER && (
-                      <span className="text-[10px] text-muted-foreground font-semibold">Operacional pertence a 1 unidade</span>
-                    )}
-                  </div>
+              {/* Lotação / Multi-Unidades */}
+              <div className="space-y-2 border-t pt-4">
+                <div className="flex justify-between items-center">
+                  <Label className="font-semibold text-xs text-slate-800 dark:text-slate-200">
+                    {isSuperAdmin ? 'Unidades de Atuação (Multi-Unidade)' : 'Unidade de Lotação (Efeito Cascata)'}
+                  </Label>
+                  {!isSuperAdmin && (
+                    <span className="text-[10px] text-blue-600 font-semibold flex items-center gap-1">
+                      <Lock className="h-3 w-3" /> Fixado na sua unidade
+                    </span>
+                  )}
+                </div>
+
+                {isSuperAdmin ? (
                   <div className="flex flex-col gap-2 bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
-                    {units.map(u => {
-                      const isUserRole = newUser.role === UserRole.USER;
+                    <p className="text-[11px] text-muted-foreground">
+                      Selecione uma ou mais unidades. Usuários com mais de uma unidade poderão alternar pelo filtro do topo.
+                    </p>
+                    {units.map((u) => {
                       const isChecked = newUser.unitIds?.includes(u.id) || false;
                       return (
                         <label key={u.id} className="flex items-center gap-2.5 cursor-pointer hover:bg-slate-100/50 p-1.5 rounded transition-all">
                           <input
-                            type={isUserRole ? "radio" : "checkbox"}
+                            type="checkbox"
                             name="new-user-units"
                             checked={isChecked}
                             onChange={(e) => {
-                              if (isUserRole) {
-                                setNewUser({ ...newUser, unitIds: [u.id], selectedUnitId: u.id });
-                              } else {
-                                const current = newUser.unitIds || [];
-                                const updated = e.target.checked
-                                  ? [...current, u.id]
-                                  : current.filter((id: string) => id !== u.id);
-                                setNewUser({ ...newUser, unitIds: updated, selectedUnitId: updated[0] || u.id });
-                              }
+                              const current = newUser.unitIds || [];
+                              const updated = e.target.checked
+                                ? [...current, u.id]
+                                : current.filter((id: string) => id !== u.id);
+                              setNewUser({
+                                ...newUser,
+                                unitIds: updated,
+                                selectedUnitId: updated[0] || u.id,
+                              });
                             }}
                             className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer h-4 w-4"
                           />
@@ -141,8 +148,15 @@ export function UserCreateDialog({
                       );
                     })}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    {units.find((u) => u.id === (newUser.unitIds?.[0]))?.name || "Unidade Escolar Vinculada"}
+                    <p className="text-[10px] font-normal text-muted-foreground mt-0.5">
+                      Usuários criados por gestor escolar são alocados automaticamente na mesma unidade.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -165,7 +179,7 @@ export function UserCreateDialog({
                       <SelectItem value={UserRole.ADMIN}>
                         <div className="flex items-center gap-2">
                           <Crown className="h-4 w-4" />
-                          Administrador (Controle Total)
+                          Administrador da Escola (Gestor Local)
                         </div>
                       </SelectItem>
                     )}
@@ -173,7 +187,15 @@ export function UserCreateDialog({
                       <SelectItem value={UserRole.USER}>
                         <div className="flex items-center gap-2">
                           <User className="h-4 w-4" />
-                          Usuário (Acesso Operacional)
+                          Usuário Operacional (Módulos Definidos)
+                        </div>
+                      </SelectItem>
+                    )}
+                    {availableRoles.includes(UserRole.PROFESSOR) && (
+                      <SelectItem value={UserRole.PROFESSOR}>
+                        <div className="flex items-center gap-2">
+                          <UserCheck className="h-4 w-4" />
+                          Professor(a)
                         </div>
                       </SelectItem>
                     )}
@@ -217,6 +239,49 @@ export function UserCreateDialog({
                   </Select>
                 </div>
               )}
+
+              {/* Liberação de Módulos (Todos vêm desativados por padrão) */}
+              <div className="space-y-2 border-t pt-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Shield className="h-4 w-4 text-blue-600" />
+                    <Label className="font-bold text-xs">Liberação de Módulos</Label>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground font-semibold">
+                    (Todos desativados por padrão)
+                  </span>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Marque os módulos que este usuário poderá operar no sistema:
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 bg-slate-50 dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 max-h-48 overflow-y-auto">
+                  {ModuleRegistry.getAllModules()
+                    .filter((m) => !m.superAdminOnly)
+                    .map((mod) => {
+                      const isChecked = newUser.allowedModules?.includes(mod.id) || false;
+                      return (
+                        <label
+                          key={mod.id}
+                          className="flex items-center gap-2 p-1.5 rounded text-xs transition-all hover:bg-blue-50/50 dark:hover:bg-slate-800 cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              const current = newUser.allowedModules || [];
+                              const updated = e.target.checked
+                                ? [...current, mod.id]
+                                : current.filter((id: string) => id !== mod.id);
+                              setNewUser({ ...newUser, allowedModules: updated });
+                            }}
+                            className="rounded border-slate-300 text-blue-600 h-3.5 w-3.5 cursor-pointer"
+                          />
+                          <span className="truncate text-slate-700 dark:text-slate-300">{mod.title}</span>
+                        </label>
+                      );
+                    })}
+                </div>
+              </div>
 
               <UserPermissionSummary 
                 role={newUser.role} 

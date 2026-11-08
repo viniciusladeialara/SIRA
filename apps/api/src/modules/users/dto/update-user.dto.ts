@@ -5,6 +5,10 @@ export class UpdateUserDto {
   @IsOptional()
   nome?: string;
 
+  @IsString()
+  @IsOptional()
+  name?: string;
+
   @IsEmail()
   @IsOptional()
   email?: string;
@@ -13,6 +17,11 @@ export class UpdateUserDto {
   @MinLength(6)
   @IsOptional()
   senha?: string;
+
+  @IsString()
+  @MinLength(6)
+  @IsOptional()
+  password?: string;
 
   @IsUUID('4')
   @IsOptional()
@@ -23,11 +32,34 @@ export class UpdateUserDto {
   selectedUnitId?: string;
 
   @IsArray()
+  @IsUUID('4', { each: true })
+  @IsOptional()
+  unitIds?: string[];
+
+  @IsArray()
   @IsString({ each: true })
   @IsOptional()
   perfis?: string[];
 
+  @IsString()
+  @IsOptional()
+  role?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  allowedModules?: string[];
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  modulos?: string[];
+
   @IsBoolean()
   @IsOptional()
   ativo?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  isActive?: boolean;
 }

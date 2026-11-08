@@ -329,11 +329,8 @@ export function canManageUser(
 
   // 2. ADMIN só gerencia usuários das suas unidades permitidas
   if (actor.role === UserRole.ADMIN) {
-    // ADMIN não pode alterar ou excluir SUPER_ADMIN ou outros ADMINs
+    // REGRA MASTER: ADMIN NÃO edita, NÃO cadastra e NÃO exclui outro ADMIN ou SUPER_ADMIN
     if (target.role === UserRole.SUPER_ADMIN || target.role === UserRole.ADMIN) {
-      if (action === 'edit' && (actor.uid === target.uid || actor.uid === target.id)) {
-        return true;
-      }
       return false;
     }
 
@@ -341,13 +338,8 @@ export function canManageUser(
     return sharesUnit(actor, target);
   }
 
-  // 3. USUARIO comum só gerencia professores da própria unidade
-  if (actor.role === UserRole.USER) {
-    if (target.role === UserRole.PROFESSOR) {
-      return sharesUnit(actor, target);
-    }
-    return false;
-  }
+  // 3. USUARIO comum não possui privilégio de gerenciar usuários
+  return false;
 
   return false;
 }

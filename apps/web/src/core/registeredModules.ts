@@ -260,7 +260,8 @@ export const APP_MODULES: ModuleDefinition[] = [
     icon: Cpu,
     category: 'sistema',
     order: 5,
-    defaultRoles: [UserRole.ADMIN],
+    superAdminOnly: true,
+    defaultRoles: [UserRole.SUPER_ADMIN],
     component: CoreDemoModule
   },
   {
@@ -270,7 +271,8 @@ export const APP_MODULES: ModuleDefinition[] = [
     icon: Settings,
     category: 'sistema',
     order: 10,
-    defaultRoles: [UserRole.ADMIN],
+    superAdminOnly: true,
+    defaultRoles: [UserRole.SUPER_ADMIN],
     component: SystemSettingsModule
   }
 ];

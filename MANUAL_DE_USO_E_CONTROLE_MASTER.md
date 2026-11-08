@@ -54,26 +54,40 @@ O **SIRA** opera sob uma arquitetura de **Monólito Modular Corporativo**, com s
 
 ## 3. Credenciais e Usuários para Controle Master
 
-Todos os usuários abaixo já estão provisionados e ativos no banco de dados com seus respectivos perfis e permissões associadas.
+O sistema foi refatorado para um modelo corporativo de alta governança com **Hierarquia Estrita em Cascata** e **Liberação Granular de Módulos**.
 
 > [!IMPORTANT]
-> **Senha Master do Ambiente de Desenvolvimento/Homologação:**  
-> Todas as contas abaixo aceitam a senha master: **`Admin@2026`** (ou **`Sira@2026`**).
+> **Único Usuário Master Provisionado (SUPER_ADMIN):**
+>
+> | Nome do Usuário | E-mail de Login | Senha Master | Perfil RBAC | Unidades Atribuídas | Acesso ao Sistema |
+> | :--- | :--- | :---: | :---: | :--- | :--- |
+> | **Super Administrador SIRA** | **`admin@sira.local`** *(ou `admin@sira.com`)* | **`Admin@2026`** | `super_admin` | **Todas as Unidades** (Cuiabá, Cáceres, Rondonópolis, Sinop) | **Acesso Master Full**: Controle total de governança, motor de sistema, parâmetros globais, criação de administradores de escolas e alternador multi-unidades no cabeçalho. |
 
-| Nome do Usuário | E-mail de Login | Senha | Perfil RBAC | Unidade | Nível de Acesso |
-| :--- | :--- | :---: | :---: | :---: | :--- |
-| **Vinicius Lara** | `viniciusladeialara@gmail.com` | `Admin@2026` | `administrador` | Cuiabá (CBA) | **Master / SuperAdmin Global** (Acesso irrestrito a todos os módulos, unidades, feature flags e banco) |
-| **Administrador SIRA** | `admin@sira.local` | `Admin@2026` | `administrador` | Cuiabá (CBA) | **Master / SuperAdmin Global** |
-| **Administrador SIRA** | `admin@sira.com` | `Admin@2026` | `administrador` | Cuiabá (CBA) | **Master / SuperAdmin Global** |
-| **Coord. Cuiabá - Marcos Silva** | `coord.cba@sira.local` | `Admin@2026` | `coordenador` | Cuiabá (CBA) | Gestão de turmas, docentes, salas e agendamentos da unidade Cuiabá |
-| **Coord. Cáceres - Luciana Prado** | `coord.cac@sira.local` | `Admin@2026` | `coordenador` | Cáceres (CAC) | Gestão da unidade Cáceres (Isolamento Multi-Tenant) |
-| **Coord. Rondonópolis - Renato Dias** | `coord.roo@sira.local` | `Admin@2026` | `coordenador` | Rondonópolis (ROO) | Gestão da unidade Rondonópolis (Isolamento Multi-Tenant) |
+---
 
-### 👨‍🏫 Professores Pré-Cadastrados (Exemplos na Base)
-Docentes cadastrados na base acadêmica vinculados às unidades (podem ser alocados em agendamentos e solicitações de substituição):
-- **Cuiabá:** `roberto.santos@sira.local` (Prof. Roberto Santos), `ana.lima@sira.local` (Profa. Ana Paula Lima).
-- **Cáceres:** `marcos.vinicius@sira.local` (Prof. Marcos Vinicius), `beatriz.ramos@sira.local` (Profa. Beatriz Ramos).
-- **Rondonópolis:** `rodrigo.carvalho@sira.local` (Prof. Rodrigo Carvalho), `patricia.souza@sira.local` (Profa. Patricia Souza).
+### 🛡️ Regras de Governança e Hierarquia do Sistema
+
+1. **Criação de Administradores de Escolas (`SUPER_ADMIN` -> `ADMIN`):**
+   - O `SUPER_ADMIN` é o **único perfil com autoridade** para cadastrar e gerenciar **Administradores de Escolas (ADMIN)**.
+   - O `SUPER_ADMIN` define a qual escola (unidade) ou escolas o gestor responderá.
+
+2. **Regra de Ouro: Admin NÃO Edita Admin e NEM Cadastra Admin:**
+   - Um administrador escolar (`ADMIN`) **NÃO** tem permissão para criar outro `ADMIN` ou `SUPER_ADMIN`.
+   - Um administrador escolar **NÃO** pode alterar nem excluir outro `ADMIN` ou `SUPER_ADMIN`.
+   - Esta restrição é validada tanto no frontend (ocultando opções e botões de ação) quanto no backend (`UsersService` rejeita com `403 Forbidden`).
+
+3. **Efeito Cascata (Lotação Automática da Escola):**
+   - Se o `SUPER_ADMIN` cadastrar um Administrador da unidade **Cáceres**, quando esse gestor entrar e cadastrar usuários (professores, secretários, etc.), o sistema **automaticamente vincula esses novos usuários à unidade Cáceres**.
+   - O gestor escolar não pode vincular colaboradores a outras unidades.
+
+4. **Módulos Desativados por Padrão (Concessão Pontual):**
+   - Todos os novos usuários cadastrados chegam com **todos os módulos desativados por padrão**.
+   - Durante o cadastro ou edição, o administrador marca expressamente os módulos que o colaborador terá direito de usar (ex.: apenas Agendamentos e Turmas).
+   - Se o colaborador se destacar ou mudar de setor, o gestor pode editar o usuário e marcar módulos adicionais (ex.: Estoque de Uniformes, Ativos, etc.).
+
+5. **Filtro Multi-Unidade no Topo da Página:**
+   - **Usuário com 1 única unidade:** O menu suspenso não é exibido; a unidade do usuário fica exibida de forma fixa e travada (ex.: *SENAI Cáceres*).
+   - **Usuário com mais de 1 unidade (ou SUPER_ADMIN):** O menu suspenso no topo da barra lateral é liberado para permitir alternar entre as unidades autorizadas.
 
 ---
 

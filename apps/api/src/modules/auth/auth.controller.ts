@@ -94,6 +94,7 @@ export class AuthController {
 
   @Get('me')
   async getProfile(@CurrentUser() user: AuthenticatedUser) {
-    return user;
+    if (!user || !user.id) return user;
+    return this.authService.getProfile(user.id);
   }
 }

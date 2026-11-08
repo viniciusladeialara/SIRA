@@ -4,6 +4,8 @@ export interface JwtPayload {
   nome: string;
   unidadeId: string | null;
   perfis: string[];
+  unitIds?: string[];
+  allowedModules?: string[];
   iat?: number;
   exp?: number;
 }
@@ -14,4 +16,6 @@ export interface AuthenticatedUser {
   nome: string;
   unidadeId: string | null;
   perfis: string[];
+  unitIds?: string[];
+  allowedModules?: string[];
 }

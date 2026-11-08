@@ -27,8 +27,11 @@ export class UsersController {
 
   @Get()
   @RequirePermissions('usuarios.ler')
-  async findAll(@CurrentTenant() tenantId: string | null) {
-    return this.usersService.findAll(tenantId);
+  async findAll(
+    @CurrentTenant() tenantId: string | null,
+    @CurrentUser() actor: AuthenticatedUser,
+  ) {
+    return this.usersService.findAll(tenantId, actor);
   }
 
   @Get(':id')
@@ -40,14 +43,21 @@ export class UsersController {
   @Post()
   @RequirePermissions('usuarios.criar')
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() dto: CreateUserDto) {
-    return this.usersService.create(dto);
+  async create(
+    @Body() dto: CreateUserDto,
+    @CurrentUser() actor: AuthenticatedUser,
+  ) {
+    return this.usersService.create(dto, actor);
   }
 
   @Patch(':id')
   @RequirePermissions('usuarios.editar')
-  async update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateUserDto) {
-    return this.usersService.update(id, dto);
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateUserDto,
+    @CurrentUser() actor: AuthenticatedUser,
+  ) {
+    return this.usersService.update(id, dto, actor);
   }
 
   @Delete(':id')
@@ -55,8 +65,8 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   async remove(
     @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() actor: AuthenticatedUser,
   ) {
-    return this.usersService.remove(id, user?.id);
+    return this.usersService.remove(id, actor?.id, actor);
   }
 }
