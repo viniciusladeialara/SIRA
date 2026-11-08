@@ -89,7 +89,7 @@ services:
       - grafana_data:/var/lib/grafana
       - ./infra/monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
       - ./infra/monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
-      - ./infra/monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards/sira:ro
+      - ./infra/monitoring/grafana/dashboards:/var/lib/grafana-dashboards:ro
     depends_on:
       - prometheus
     networks:
