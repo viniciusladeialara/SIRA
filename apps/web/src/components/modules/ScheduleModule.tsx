@@ -246,13 +246,24 @@ export function ScheduleModule() {
     end: endOfWeek(currentDate, { weekStartsOn: 1 }) 
   }).slice(0, 5);
 
-  const getSchedulesForRoomAndDay = (roomId: string, day: Date) => {
-    return schedules.filter(s => s.roomId === roomId && isSameDay(s.startTime.toDate(), day))
-      .filter(item => activeTurno === 'todos' || getTurnoAndColor(item.startTime).name === activeTurno)
-      .sort((a, b) => a.startTime.toMillis() - b.startTime.toMillis());
+  const toSafeDate = (d: any): Date => {
+    if (!d) return new Date(0);
+    if (typeof d?.toDate === 'function') return d.toDate();
+    if (d instanceof Date) return d;
+    return new Date(d);
   };
 
-  const getHolidayForDay = (day: Date) => holidays.find(h => isSameDay(h.date.toDate(), day));
+  const getSchedulesForRoomAndDay = (roomId: string, day: Date) => {
+    return schedules.filter(s => s.roomId === roomId && isSameDay(toSafeDate(s.startTime), day))
+      .filter(item => activeTurno === 'todos' || getTurnoAndColor(item.startTime).name === activeTurno)
+      .sort((a, b) => {
+        const aTime = typeof a.startTime?.toMillis === 'function' ? a.startTime.toMillis() : toSafeDate(a.startTime).getTime();
+        const bTime = typeof b.startTime?.toMillis === 'function' ? b.startTime.toMillis() : toSafeDate(b.startTime).getTime();
+        return aTime - bTime;
+      });
+  };
+
+  const getHolidayForDay = (day: Date) => holidays.find(h => isSameDay(toSafeDate(h.date), day));
 
   // --- MÉTRICAS DE OCUPAÇÃO DA SEMANA (A08) ---
   const occupancyStats = useMemo(() => {
@@ -260,7 +271,7 @@ export function ScheduleModule() {
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
     const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
     const weekSchedules = schedules.filter(s => {
-      const sDate = s.startTime.toDate();
+      const sDate = toSafeDate(s.startTime);
       const inWeek = sDate >= weekStart && sDate <= weekEnd;
       if (!inWeek) return false;
       if (activeTurno === 'todos') return true;
@@ -280,7 +291,7 @@ export function ScheduleModule() {
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
     const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
     const weekSchedules = schedules.filter(s => {
-      const sDate = s.startTime.toDate();
+      const sDate = toSafeDate(s.startTime);
       return sDate >= weekStart && sDate <= weekEnd;
     });
     if (weekSchedules.length === 0) {

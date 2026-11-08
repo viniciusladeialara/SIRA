@@ -50,17 +50,39 @@ export async function fetchTeachers(unitId?: string) {
     }));
 }
 
+function toHolidayTimestamp(d: any) {
+    if (!d) {
+        const now = new Date();
+        return {
+            seconds: Math.floor(now.getTime() / 1000),
+            nanoseconds: 0,
+            toDate: () => now,
+            toMillis: () => now.getTime(),
+            toISOString: () => now.toISOString(),
+        };
+    }
+    if (typeof d?.toDate === 'function') return d;
+    const date = d instanceof Date ? d : new Date(d);
+    return {
+        seconds: Math.floor(date.getTime() / 1000),
+        nanoseconds: (date.getTime() % 1000) * 1e6,
+        toDate: () => date,
+        toMillis: () => date.getTime(),
+        toISOString: () => date.toISOString(),
+    };
+}
+
 export function subscribeToHolidays(callback: (holidays: any[]) => void) {
     let active = true;
     const fetchHolidays = async () => {
         try {
             const data = await apiService.getHolidays();
-            if (active) {
+            if (active && Array.isArray(data)) {
                 callback(data.map((h: any) => ({
                     id: h.id,
-                    name: h.nome,
-                    date: h.data,
-                    type: h.tipo,
+                    name: h.nome || h.name,
+                    date: toHolidayTimestamp(h.data || h.date),
+                    type: h.tipo || h.type,
                 })));
             }
         } catch (err) {

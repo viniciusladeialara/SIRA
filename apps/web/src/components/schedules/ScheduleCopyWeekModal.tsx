@@ -144,7 +144,7 @@ export function ScheduleCopyWeekModal({
 
         if (skipHolidays) {
           const isHoliday = holidays.some(h => {
-            const hDate = h.date instanceof Timestamp ? h.date.toDate() : (h.date as any).toDate();
+            const hDate = typeof h.date?.toDate === 'function' ? h.date.toDate() : (h.date instanceof Date ? h.date : new Date(h.date));
             return isSameDay(hDate, projectedDate);
           });
 
@@ -189,7 +189,7 @@ export function ScheduleCopyWeekModal({
           // Checa feriado
           if (skipHolidays) {
             const holidayMatch = holidays.find(h => {
-              const hDate = h.date instanceof Timestamp ? h.date.toDate() : (h.date as any).toDate();
+              const hDate = typeof h.date?.toDate === 'function' ? h.date.toDate() : (h.date instanceof Date ? h.date : new Date(h.date));
               return isSameDay(hDate, newStart);
             });
 

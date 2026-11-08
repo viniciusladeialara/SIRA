@@ -5,6 +5,7 @@ import { UserRole, UserWithRole, UserScope, UserStatus, sharesUnit, canManageUse
 import { logAction, AuditAction } from '@/lib/AuditLog';
 import { db, auth } from "@/lib/db";
 import { collection, onSnapshot, updateDoc, deleteDoc, doc, getDocs, setDoc } from "@/lib/sira-sql-adapter";
+import { apiService } from '@/services/apiService';
 
 import { httpsCallable } from "@/lib/sira-functions-adapter";
 import { functions } from "@/lib/db";

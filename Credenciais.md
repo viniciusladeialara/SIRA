@@ -22,3 +22,10 @@ Credenciais Padrão para Teste
 E-mail: admin@sira.local
 Senha: Admin@2026
 Unidade Padrão: SENAI Cuiabá (a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11)
+
+LOGIN USUARIO
+Nome: Super Administrador SIRA
+E-mail: admin@sira.local (ou alias admin@sira.com)
+Senha Master: Admin@2026
+Perfil: super_admin e administrador
+Acesso: Todas as 4 unidades operacionais (Cuiabá, Cáceres, Rondonópolis, Sinop) e todos os 19 módulos do sistema ativados, incluindo a visão de Motor & Governança / Configurações do Sistema (system-settings e core-demo).
