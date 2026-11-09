@@ -3,7 +3,8 @@
 Plataforma empresarial de alta performance e disponibilidade para gestão operacional, acadêmica, planejamento de matrizes horárias e controle de recursos físicos das unidades operacionais do **SENAI**.
 
 > 📖 **Guia Operacional e Credenciais Master:**  
-> Consulte o [**Manual de Uso e Controle Master (MANUAL_DE_USO_E_CONTROLE_MASTER.md)**](file:///c:/Users/VINICIUS/Documents/GitHub/SIRA/MANUAL_DE_USO_E_CONTROLE_MASTER.md) para a lista de usuários pré-cadastrados, senhas, portas de serviços e procedimentos de homologação.
+> - Consulte o [**Manual de Uso e Controle Master (MANUAL_DE_USO_E_CONTROLE_MASTER.md)**](file:///c:/Users/VINICIUS/Documents/GitHub/SIRA/MANUAL_DE_USO_E_CONTROLE_MASTER.md) para a lista de usuários pré-cadastrados, senhas, portas de serviços e procedimentos de homologação.
+> - Consulte o [**Documento Analítico e Catálogo Completo de APIs (ANALISE_SISTEMA_E_CATALOGO_APIS.md)**](file:///c:/Users/VINICIUS/Documents/GitHub/SIRA/ANALISE_SISTEMA_E_CATALOGO_APIS.md) para a visão profunda de arquitetura, schemas do banco de dados, fluxo de autenticação e especificação de todos os endpoints REST.
 
 ---
 
@@ -77,6 +78,8 @@ npm run dev:web
 | :--- | :--- | :--- | :--- | :--- |
 | **Frontend Web SIRA** | [http://localhost:5173](http://localhost:5173) | `admin@sira.local` | `Admin@2026` | Permite também `admin@sira.com` ou `viniciusladeialara@gmail.com` |
 | **Backend API (REST)**| [http://localhost:3000/api/v1](http://localhost:3000/api/v1) | — | — | Documentação e endpoints da API |
+| **Grafana (Observabilidade)**| [http://localhost:3001](http://localhost:3001) | `admin` | `Admin@2026` | Dashboards pré-configurados de performance e saúde |
+| **Prometheus (Métricas)**| [http://localhost:9090](http://localhost:9090) | — | — | Coleta em tempo real de `/api/v1/metrics` do NestJS |
 | **pgAdmin 4 (Console)**| [http://localhost:8080](http://localhost:8080) | `admin@sira.com` | `Admin@2026` | Servidor `sira-postgres` já vem pré-configurado na barra lateral |
 | **PostgreSQL 16 (Produção)** | `localhost:5432` | `sira_admin` | `Sira@2026` | Banco: `sira` (Multi-schema) |
 | **PostgreSQL 16 (Teste/Sandbox)** | `localhost:5432` | `sira_admin` | `Sira@2026` | Banco: `sira_teste` (Isolado para simulação) |
