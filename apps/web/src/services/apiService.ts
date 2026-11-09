@@ -1,5 +1,42 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
 
+let isRefreshing = false;
+let refreshPromise: Promise<string | null> | null = null;
+
+async function doRefreshToken(): Promise<string | null> {
+  const refreshToken = localStorage.getItem('refresh_token');
+  if (!refreshToken) return null;
+
+  try {
+    const res = await fetch(`${API_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (!res.ok) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      return null;
+    }
+
+    const data = await res.json();
+    const newToken = data.access_token || data.token;
+    if (newToken) {
+      localStorage.setItem('token', newToken);
+      localStorage.setItem('access_token', newToken);
+      if (data.refresh_token) {
+        localStorage.setItem('refresh_token', data.refresh_token);
+      }
+      return newToken;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Serviço de API cliente para o SIRA (Sistema Integrado de Recursos Acadêmicos)
  * Conecta com o backend NestJS + PostgreSQL + Redis
@@ -8,7 +45,7 @@ export const apiService = {
   /**
    * Realiza requisições HTTP injetando o Token JWT e a Unidade ativa
    */
-  async request(endpoint: string, options: RequestInit = {}) {
+  async request(endpoint: string, options: RequestInit = {}): Promise<any> {
     const token = localStorage.getItem('token') || localStorage.getItem('access_token');
     const selectedUnitId = localStorage.getItem('selected_unit_id');
 
@@ -27,10 +64,34 @@ export const apiService = {
       ...((options.headers as Record<string, string>) || {}),
     };
 
-    const response = await fetch(`${API_URL}${cleanEndpoint}`, {
+    let response = await fetch(`${API_URL}${cleanEndpoint}`, {
       ...options,
       headers,
     });
+
+    // Se retornar 401 e não for endpoint de autenticação pública, tenta renovar o token via refresh_token
+    if (
+      response.status === 401 &&
+      !cleanEndpoint.includes('/auth/login') &&
+      !cleanEndpoint.includes('/auth/refresh')
+    ) {
+      if (!isRefreshing) {
+        isRefreshing = true;
+        refreshPromise = doRefreshToken().finally(() => {
+          isRefreshing = false;
+          refreshPromise = null;
+        });
+      }
+
+      const newToken = await refreshPromise;
+      if (newToken) {
+        headers['Authorization'] = `Bearer ${newToken}`;
+        response = await fetch(`${API_URL}${cleanEndpoint}`, {
+          ...options,
+          headers,
+        });
+      }
+    }
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -92,6 +153,13 @@ export const apiService = {
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('user');
     }
+  },
+
+  async changePassword(newPassword: string, currentPassword?: string) {
+    return this.request('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ newPassword, currentPassword }),
+    });
   },
 
   // --- Módulo CORE (Usuários, Unidades e Perfis no PostgreSQL) ---

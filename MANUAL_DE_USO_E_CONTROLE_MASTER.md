@@ -152,6 +152,8 @@ menu.bat
 - **Visualização Focal do Docente:**
   - Acesso direto à sua grade de horários individual e das turmas designadas.
   - Painel de solicitação de substituição/troca de horário com outro docente.
+  - **Troca de Senha Obrigatória no 1º Acesso:** Contas criadas por administradores exigem a definição de uma nova senha pessoal no primeiro login. A troca é persistida de forma segura no banco de dados PostgreSQL (`POST /api/v1/auth/change-password`) com criptografia bcrypt e registro de auditoria.
+  - **Sessão Contínua com Auto-Refresh:** As chamadas do portal do docente utilizam renovação automática de token JWT (`POST /api/v1/auth/refresh`), garantindo navegação contínua sem mensagens de sessão expirada.
   - *Restrição:* Sem botões de exclusão, alteração de infraestrutura ou gestão de usuários.
 
 ---

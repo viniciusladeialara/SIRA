@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { auth, db } from "@/lib/db";
-import { updatePassword } from "@/lib/sira-auth-adapter";
+import { apiService } from "@/services/apiService";
 import { doc, updateDoc } from "@/lib/sira-sql-adapter";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -65,24 +65,15 @@ export function UserSettingsModal({ isOpen, onClose, userData, currentUser }: Us
 
         setLoading(true);
         try {
-            if (auth.currentUser) {
-                await updatePassword(auth.currentUser, newPassword);
-                toast({ title: "Senha Alterada", description: "Sua senha foi atualizada com sucesso." });
-                setNewPassword("");
-                setConfirmPassword("");
-                onClose();
-            }
+            await apiService.changePassword(newPassword);
+            toast({ title: "Senha Alterada", description: "Sua senha foi atualizada com sucesso." });
+            setNewPassword("");
+            setConfirmPassword("");
+            onClose();
         } catch (error: any) {
             console.error("Erro ao atualizar senha:", error);
-            if (error.code === 'auth/requires-recent-login') {
-                toast({ 
-                    title: "Segurança Requerida", 
-                    description: "Por favor, saia e entre novamente para realizar esta operação sensível.", 
-                    variant: "destructive" 
-                });
-            } else {
-                toast({ title: "Erro", description: "Falha ao alterar senha.", variant: "destructive" });
-            }
+            const msg = error.message || "Falha ao alterar senha.";
+            toast({ title: "Erro", description: msg, variant: "destructive" });
         } finally {
             setLoading(false);
         }

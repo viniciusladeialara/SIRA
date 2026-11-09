@@ -12,7 +12,21 @@ export const db = {
 };
 
 export const auth = {
-  currentUser: null,
+  get currentUser() {
+    try {
+      const stored = localStorage.getItem('user');
+      if (stored) {
+        const u = JSON.parse(stored);
+        return {
+          uid: u.id || u.uid || 'uid',
+          id: u.id || u.uid || 'uid',
+          email: u.email || '',
+          displayName: u.nome || u.name || '',
+        };
+      }
+    } catch {}
+    return null;
+  },
 };
 
 export const functions = {};

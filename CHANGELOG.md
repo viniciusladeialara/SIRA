@@ -150,6 +150,42 @@ Refatoração corporativa de Governança de Usuários, Hierarquia em Cascata, Se
 
 ---
 
+## [2.1.0-ENTERPRISE] - 2026-11-08
+
+### 📌 Resumo da Atualização
+Implementação completa da troca de senha no banco de dados PostgreSQL com auditoria corporativa, migração total das telas de troca de senha para a API NestJS desacoplando legados do Firebase Auth, mecanismo de auto-refresh de sessão JWT resiliente a expiração, sincronização bidirecional entre contas de usuário e registros de docentes (`academico.docentes`), e proteção completa contra erros de manipulação de datas no Portal do Docente.
+
+---
+
+### 📂 Detalhamento das Alterações
+
+#### 1. TROCA DE SENHA NO BANCO DE DADOS (POSTGRESQL + BCRYPT)
+- **Novo Endpoint**: `POST /api/v1/auth/change-password` autenticado via JWT (`@CurrentUser()`).
+- **DTO Corporativo**: [`ChangePasswordDto`](file:///c:/Users/VINICIUS/Documents/GitHub/SIRA/apps/api/src/modules/auth/dto/change-password.dto.ts) com validação de formato e comprimento mínimo (6 caracteres).
+- **Criptografia e Auditoria**:
+  - Senha gravada com hash seguro via `bcrypt.hash(newPassword, 10)` na tabela `core.usuarios`.
+  - Registro de auditoria imutável com ação `SENHA_ALTERADA` gravado automaticamente na tabela `core.logs`.
+- **Validação de Senha Atual**: Suporte opcional à validação de senha atual informada antes da substituição.
+
+#### 2. INTEGRAÇÃO E DESACOPLAMENTO DO FIREBASE AUTH NO FRONTEND
+- **`ForcePasswordChange.tsx`**: Substituída a chamada legada do Firebase Auth por `await apiService.changePassword(newPassword)`, integrando o `useAuth().logout()` e atualizando o status do docente localmente.
+- **`UserSettingsModal.tsx`**: Migrada a aba de alteração de senha do perfil do usuário para `apiService.changePassword`.
+- **`sira-auth-adapter.ts` e `db.ts`**: Atualizadas as propriedades globais `auth.currentUser` como getters dinâmicos vinculados à sessão ativa do usuário no `localStorage`.
+
+#### 3. INTERCEPTOR JWT COM AUTO-REFRESH NO FRONTEND
+- **Mecanismo Anti-401**: No cliente HTTP [`apiService.ts`](file:///c:/Users/VINICIUS/Documents/GitHub/SIRA/apps/web/src/services/apiService.ts), respostas com código `401 Unauthorized` fora do fluxo de login disparam renovação atômica em segundo plano via `POST /auth/refresh`.
+- **Retentativa Automática**: A requisição original é refeita de forma transparente com o novo token de acesso, eliminando quedas de sessão inesperadas no painel.
+
+#### 4. SINCRONIZAÇÃO DE USUÁRIOS E DOCENTES (`academico.docentes`)
+- **Criação de Usuários com Perfil Professor**: Atualizado o [`UsersService.create`](file:///c:/Users/VINICIUS/Documents/GitHub/SIRA/apps/api/src/modules/users/users.service.ts) para vincular o `usuario_id` ou criar o cadastro docente correspondente de forma atômica.
+- **Resolução de `teacherId`**: Ambos os endpoints `/auth/login` e `/auth/me` agora retornam o `teacherId` para contas vinculadas a docentes, permitindo carregamento imediato da grade horária e dados acadêmicos.
+- **Busca Flexível no `DocentesService.findById`**: Aceita busca tanto pelo ID do docente quanto pelo ID do usuário (`usuario_id`).
+
+#### 5. RESILIÊNCIA DE DATAS NO PORTAL DO DOCENTE
+- **Eliminação de Exceções `.toDate()` e `.toMillis()`**: Atualizado o componente [`TeacherDashboardModule.tsx`](file:///c:/Users/VINICIUS/Documents/GitHub/SIRA/apps/web/src/components/modules/TeacherDashboardModule.tsx) utilizando [`toSafeDate`](file:///c:/Users/VINICIUS/Documents/GitHub/SIRA/apps/web/src/lib/date-utils.ts) e `toSafeMillis` em todas as rotinas de verificação de turnos, agendamentos do dia, ordenação da semana e detecção de feriados.
+
+---
+
 ### 🛡️ Matriz de Risco e Compatibilidade
 | Componente | Compatibilidade Reversa | Risco Residual | Mitigação Implementada |
 | :--- | :---: | :---: | :--- |

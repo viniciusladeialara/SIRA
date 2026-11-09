@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { format, isSameDay, isToday, isTomorrow, startOfWeek, endOfWeek, addWeeks, subWeeks, eachDayOfInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { formatInTimeZone, getHoursInTimeZone } from "@/lib/date-utils";
+import { formatInTimeZone, getHoursInTimeZone, toSafeDate, toSafeMillis } from "@/lib/date-utils";
 
 import { useFirestoreCache } from "@/hooks/useCache";
 import { fetchTeacherSchedules, Schedule } from "@/services/reservationService";
@@ -62,7 +62,7 @@ const turnoColors = {
 };
 
 const getTurnoAndColor = (startTime: Schedule["startTime"]) => {
-    const hour = getHoursInTimeZone(startTime.toDate());
+    const hour = getHoursInTimeZone(toSafeDate(startTime));
     if (hour >= 7 && hour < 13) return { name: "matutino", colors: turnoColors.matutino };
     if (hour >= 13 && hour < 18) return { name: "vespertino", colors: turnoColors.vespertino };
     return { name: "noturno", colors: turnoColors.noturno };
@@ -385,13 +385,13 @@ export function TeacherDashboardModule({ initialSection = "scheduling" }: Teache
 
     const getSchedulesForRoomAndDay = useCallback((roomId: string, day: Date) => {
         return weeklySchedules
-            .filter((schedule) => schedule.roomId === roomId && isSameDay(schedule.startTime.toDate(), day))
+            .filter((schedule) => schedule.roomId === roomId && isSameDay(toSafeDate(schedule.startTime), day))
             .filter((schedule) => activeTurno === "todos" || getTurnoAndColor(schedule.startTime).name === activeTurno)
-            .sort((a, b) => a.startTime.toMillis() - b.startTime.toMillis());
+            .sort((a, b) => toSafeMillis(a.startTime) - toSafeMillis(b.startTime));
     }, [weeklySchedules, activeTurno]);
 
     const getHolidayForDay = useCallback((day: Date) => {
-        return holidays.find((holiday) => isSameDay(holiday.date.toDate(), day));
+        return holidays.find((holiday) => isSameDay(toSafeDate(holiday.date), day));
     }, [holidays]);
 
     const openReserveModal = useCallback((roomId?: string, date?: Date, startTime?: string, endTime?: string) => {
@@ -438,12 +438,12 @@ export function TeacherDashboardModule({ initialSection = "scheduling" }: Teache
     const sortedSchedules = useMemo(() => {
         const now = new Date();
         return [...schedules].map(s => {
-            const isFinished = now > s.endTime.toDate();
+            const isFinished = now > toSafeDate(s.endTime);
             // Se já passou do horário, o status derivado é 'concluida'
             // mas mantemos o status do banco se ele for explicitamente definido
             const derivedStatus = isFinished ? 'concluida' : (s.status || 'pendente');
             return { ...s, derivedStatus };
-        }).sort((a, b) => a.startTime.toDate().getTime() - b.startTime.toDate().getTime());
+        }).sort((a, b) => toSafeMillis(a.startTime) - toSafeMillis(b.startTime));
     }, [schedules]);
 
     const nextSchedules = useMemo(() => {
@@ -453,7 +453,7 @@ export function TeacherDashboardModule({ initialSection = "scheduling" }: Teache
     }, [sortedSchedules]);
 
     const todaySchedules = useMemo(() => {
-        return sortedSchedules.filter((schedule) => isToday(schedule.startTime.toDate()));
+        return sortedSchedules.filter((schedule) => isToday(toSafeDate(schedule.startTime)));
     }, [sortedSchedules]);
 
     if (isLoadingTeacher) {
@@ -499,8 +499,8 @@ export function TeacherDashboardModule({ initialSection = "scheduling" }: Teache
 
     const selectedScheduleIsMine = selectedSchedule?.teacherId === teacher.id;
     const renderScheduleCard = (schedule: any) => {
-        const start = schedule.startTime.toDate();
-        const end = schedule.endTime.toDate();
+        const start = toSafeDate(schedule.startTime);
+        const end = toSafeDate(schedule.endTime);
         const isConflict = schedule.scheduleStatus === 'conflict_flagged';
         return (
             <div

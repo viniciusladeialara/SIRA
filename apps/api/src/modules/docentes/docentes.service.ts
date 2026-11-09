@@ -27,7 +27,13 @@ export class DocentesService {
 
   async findById(id: string) {
     const docente = await this.prisma.docentes.findFirst({
-      where: { id, excluido_em: null },
+      where: {
+        OR: [
+          { id },
+          { usuario_id: id },
+        ],
+        excluido_em: null,
+      },
       include: {
         unidades: true,
         usuarios: true,

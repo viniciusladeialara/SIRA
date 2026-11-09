@@ -10,7 +10,20 @@ export interface User {
 export const browserSessionPersistence = 'SESSION';
 
 export const getAuth = (app?: any) => ({
-  currentUser: null,
+  get currentUser() {
+    try {
+      const stored = localStorage.getItem('user');
+      if (stored) {
+        const u = JSON.parse(stored);
+        return {
+          uid: u.id || u.uid || 'uid',
+          email: u.email || '',
+          displayName: u.nome || u.name || '',
+        };
+      }
+    } catch {}
+    return null;
+  },
 });
 
 export const setPersistence = async (auth: any, persistence: any) => {};
@@ -55,7 +68,9 @@ export const onAuthStateChanged = (auth: any, callback: (user: User | null) => v
   };
 };
 
-export const updatePassword = async (user: any, newPassword: string) => {};
+export const updatePassword = async (user: any, newPassword: string) => {
+  return apiService.changePassword(newPassword);
+};
 export const sendPasswordResetEmail = async (auth: any, email: string) => {};
 export const verifyPasswordResetCode = async (auth: any, code: string) => 'admin@sira.local';
 export const confirmPasswordReset = async (auth: any, code: string, newPassword: string) => {};

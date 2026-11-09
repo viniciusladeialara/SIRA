@@ -15,6 +15,7 @@ import type { Request } from 'express';
 import { AuthService } from './auth.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RefreshTokenDto } from './dto/refresh-token.dto.js';
+import { ChangePasswordDto } from './dto/change-password.dto.js';
 import { Public } from './decorators/public.decorator.js';
 import { CurrentUser } from './decorators/current-user.decorator.js';
 import type { AuthenticatedUser } from './interfaces/jwt-payload.interface.js';
@@ -96,5 +97,14 @@ export class AuthController {
   async getProfile(@CurrentUser() user: AuthenticatedUser) {
     if (!user || !user.id) return user;
     return this.authService.getProfile(user.id);
+  }
+
+  @Post('change-password')
+  @HttpCode(HttpStatus.OK)
+  async changePassword(
+    @Body() dto: ChangePasswordDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.authService.changePassword(user.id, dto.newPassword, dto.currentPassword);
   }
 }

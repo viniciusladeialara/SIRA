@@ -62,4 +62,8 @@ export class CreateUserDto {
   @IsBoolean({ message: 'O status isActive deve ser booleano.' })
   @IsOptional()
   isActive?: boolean;
+
+  @IsUUID('4', { message: 'O ID do professor vinculado deve ser um UUID v4.' })
+  @IsOptional()
+  teacherId?: string;
 }

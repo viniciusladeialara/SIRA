@@ -72,6 +72,7 @@ export class UsersService {
           },
         },
         usuario_modulos: true,
+        docentes: true,
       },
       orderBy: { nome: 'asc' },
     });
@@ -98,6 +99,7 @@ export class UsersService {
           },
         },
         usuario_modulos: true,
+        docentes: true,
       },
     });
 
@@ -206,6 +208,50 @@ export class UsersService {
             ativo: true,
           },
         }).catch(() => null);
+      }
+    }
+
+    // 4. Se o usuário for professor, vincula ou cria registro em academico.docentes
+    if (requestedProfiles.includes('professor')) {
+      try {
+        if (dto.teacherId) {
+          await this.prisma.docentes.update({
+            where: { id: dto.teacherId },
+            data: { usuario_id: user.id, email: user.email },
+          });
+        } else {
+          const existingDocente = await this.prisma.docentes.findFirst({
+            where: {
+              OR: [
+                { email: { equals: user.email, mode: 'insensitive' } },
+                { usuario_id: user.id },
+              ],
+              excluido_em: null,
+            },
+          });
+
+          if (existingDocente) {
+            await this.prisma.docentes.update({
+              where: { id: existingDocente.id },
+              data: { usuario_id: user.id },
+            });
+          } else {
+            const fallbackUnit = effectiveUnitId || (await this.prisma.unidades.findFirst({ select: { id: true } }))?.id;
+            if (fallbackUnit) {
+              await this.prisma.docentes.create({
+                data: {
+                  usuario_id: user.id,
+                  nome: user.nome,
+                  email: user.email,
+                  unidade_id: fallbackUnit,
+                  ativo: true,
+                },
+              });
+            }
+          }
+        }
+      } catch (docenteErr) {
+        this.logger.warn('Falha não-bloqueante ao sincronizar docente:', docenteErr);
       }
     }
 
@@ -464,7 +510,7 @@ export class UsersService {
    * Remove senha_hash e formata resposta corporativa limpa com suporte completo a multi-unidade e módulos
    */
   private sanitizeUser(user: any) {
-    const { senha_hash, usuario_perfis, usuario_unidades, usuario_modulos, unidades, ...rest } = user;
+    const { senha_hash, usuario_perfis, usuario_unidades, usuario_modulos, unidades, docentes, ...rest } = user;
 
     const perfis = (usuario_perfis || []).map((up: any) => ({
       id: up.perfis.id,
@@ -516,6 +562,7 @@ export class UsersService {
       allowedModules,
       role,
       perfis,
+      teacherId: (docentes && docentes.length > 0) ? docentes[0].id : null,
       unidade: unidades ? { id: unidades.id, nome: unidades.nome, sigla: unidades.sigla } : null,
       isActive: rest.ativo,
     };
